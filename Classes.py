@@ -1,7 +1,7 @@
 import argparse as arg
 import numpy as np
-from numpy.core.numeric import moveaxis
 import pandas as pd
+import progressbar as pb
 
 class Population:
 # add model to choose between Moe di Stefeno and Sana
@@ -21,22 +21,13 @@ class Population:
         elif self.model == None:
             print('Binaries are ready')
 
-    def Sana_etal12(self):
-        self.binaries['primary'] = self.kroupa(self.Nbin, self.mass_range, self.alphas)
-        q = self.mass_ratio(self.q_min, self.q_max, self.q_slope, self.Nbin)
-        secondary = self.binaries['primary'] * q
-        self.binaries['secondary'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
-        self.binaries['period'] = self.period(self.P_min, self.P_max, self.P_slope, self.Nbin)
-        self.binaries['ecc'] = self.eccentricity(self.e_min, self.e_max, self.e_slope, self.Nbin)
-        
-
     @classmethod
     def setup_params(cls, self, kwards):
         params = {
             'alphas':[-1.3,-2.3],
             'mass_range':[0.1,0.5,150],
             'P_min': 0.15,
-            'P_max': 3.5,
+            'P_max': 5.5,
             'P_slope': -0.55,
             'e_min': 0.0,
             'e_max': 0.9999,
@@ -52,10 +43,30 @@ class Population:
                 setattr(self, key, kwards[key])
             else:
                 setattr(self, key, params[key])
+    
+    def Sana_etal12(self):
+        # The beginning of the main function
+        pbar = pb.ProgressBar().start()
+        self.binaries['primary'] = self.IMF(self.Nbin, self.mass_range, self.alphas)
+        pbar.update((1/5)*100)
+        q = self.mass_ratio(self.Nbin, self.q_min, self.q_max, self.q_slope)
+        pbar.update((2/5)*100)
+        secondary = self.binaries['primary'] * q
+        self.binaries['secondary'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
+        pbar.update((3/5)*100)
+        self.binaries['period'] = self.period(self.Nbin, self.P_min, self.P_max, self.P_slope)
+        pbar.update((4/5)*100)
+        self.binaries['ecc'] = self.eccentricity(self.Nbin, self.e_min, self.e_max, self.e_slope)
+        pbar.finish()   
+        # The end
 
     @staticmethod
-    def kroupa(number_of_stars, mass_bouders, alphas):
-
+    def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
+        """
+        default: f(m) = m^alpha (Kroupa01)
+                0.1 <= m <= 0.5   alpha = -1.3
+                0.5 <= m <= 150   alpha = -2.3
+        """
         random = np.random.random
 
         breaks = np.array(mass_bouders)
@@ -103,39 +114,43 @@ class Population:
         return breaks[:-1][indices] * result
 
     @staticmethod
-    def period(lower_lim, upper_lim, slope, Nbin):
-        """ 
-        default: 
+    def period(Nbin, lower_lim=0.15, upper_lim=3.5, pi=-0.55):
         """
-
+        default: f(logP) = logP^pi (Sana+12)
+                lower_lim = 0.15
+                upper_lim = 5.5
+                pi = -0.55
+        """
         X = np.random.random(Nbin)
-        logP = pow((pow(upper_lim,1.+slope) - pow(lower_lim,1.+slope)) * X + \
-                pow(lower_lim,1.+slope),1./(1.+slope))
+        logP = pow((pow(upper_lim,1.+pi) - pow(lower_lim,1.+pi)) * X + \
+                pow(lower_lim,1.+pi),1./(1.+pi))
         period = pow(10.,logP)
         return period
 
     @staticmethod
-    def eccentricity(lower_lim, upper_lim, slope, Nbin):
+    def eccentricity(Nbin, lower_lim=0.0, upper_lim=0.9999, eta=-0.45):
         """
-        default:
+        default: f(e) = e^eta (Sana+12)
+                lower_lim = 0.0
+                upper_lim = 0.9999
+                eta = -0,45 
         """
-
         X = np.random.random(Nbin)
-        ecc = pow((pow(upper_lim,1.+slope) - pow(lower_lim,1.+slope)) * X + \
-                pow(lower_lim,1.+slope),1./(1.+slope))
+        ecc = pow((pow(upper_lim,1.+eta) - pow(lower_lim,1.+eta)) * X + \
+                pow(lower_lim,1.+eta),1./(1.+eta))
         return ecc
 
     @staticmethod
-    def mass_ratio(lower_lim, upper_lim, slope, Nbin):
+    def mass_ratio(Nbin, lower_lim=0.1, upper_lim=1., kappa=-0.1):
         """
-        default:
+        default: f(q) = q^kappa (Sana+12)
+                lower_lim = 0.1
+                upper_lim = 1.
+                kappa = -0.1 
         """
         X = np.random.random(Nbin)
-        q = pow((pow(upper_lim,1.+slope) - pow(lower_lim,1.+slope)) * X + \
-                pow(lower_lim,1.+slope),1./(1.+slope))
+        q = pow((pow(upper_lim,1.+kappa) - pow(lower_lim,1.+kappa)) * X + \
+                pow(lower_lim,1.+kappa),1./(1.+kappa))
         return q
-#        secondary = masses_primary * q
-#        secondary = np.where(secondary < 0.1, 0.1, secondary)
-#        return secondary
 
 #class Constants:
