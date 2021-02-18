@@ -1,5 +1,6 @@
 import argparse as arg
 import numpy as np
+from numpy.core.numeric import moveaxis
 import pandas as pd
 
 class Population:
@@ -8,19 +9,25 @@ class Population:
 
         self.Nbin = number_of_binaries
         self.Nstars = int(2.*self.Nbin)
-
+        self.model = model
         self.setup_params(self, kwards)
         
         self.binaries = pd.DataFrame(columns=['primary','secondary','period','ecc','separation'])
 
+        if self.model == 'sana':
+            self.Sana_etal12()
+        elif self.model == 'moedistefano':
+            print('We will implent this model soon')
+        elif self.model == None:
+            print('Binaries are ready')
+
+    def Sana_etal12(self):
         self.binaries['primary'] = self.kroupa(self.Nbin, self.mass_range, self.alphas)
         q = self.mass_ratio(self.q_min, self.q_max, self.q_slope, self.Nbin)
         secondary = self.binaries['primary'] * q
         self.binaries['secondary'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         self.binaries['period'] = self.period(self.P_min, self.P_max, self.P_slope, self.Nbin)
         self.binaries['ecc'] = self.eccentricity(self.e_min, self.e_max, self.e_slope, self.Nbin)
-
-#    def Sana_etal12(self):
         
 
     @classmethod
