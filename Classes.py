@@ -11,8 +11,9 @@ class Population:
         self.Nstars = int(2.*self.Nbin)
         # Update paramenters needed for draw distributions
         self.setup_params(self, kwards)
-        # Upload the method used to save inputs for mobse
+        # Upload the method used to save inputs for our pop-syn
         self.save_mobse_input = self._save_mobse_input
+        self.save_sevn_input = self._save_sevn_input
         # Check for IC model
         self.model = None
         if 'model' in kwards:
@@ -86,6 +87,23 @@ class Population:
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(self.Nbin-backup), delimiter=' ', comments='')
 
+    def _save_sevn_input(self, name, z1, z2, o1, o2, tend, tstart,\
+                        dt, sn1, sn2, dtout):
+        """
+        Input: 
+            z1, z2 = metallicity of the stars 1 and 2 (arrays)
+            o1, o2 = spin of the stars 1 and 2 [1/yr] (arrays)
+            tend = ending time of the simulation [Myr] (float)
+            tstart = starting time of the simulation [Myr] (float)
+            dt = time step of the integration [Myr] (not used)
+            sn1, sn2 = supernova explosion mechanism of the stars (string: _delayed_ / _rapid_ / _startrack_)
+            dtout = time step for printing outputs [Myr] (float)
+        """
+        np.savetxt(name+".in", 
+            np.c_[z1, z2], 
+            fmt=('%1.4f %1.4f'),
+            delimiter=' ', comments='')
+
     @staticmethod
     def save_mobse_input(name, m1, m2, p, ecc, met, tmax, backup=10):
         """
@@ -94,7 +112,7 @@ class Population:
             m1 = primary masses (array)
             m2 = secondary masses (array)
             p = periods (array)
-            ecc = eccentricity (array)s
+            ecc = eccentricity (array)
             met = metallicity (string)
             tmax = max time (float)
         """
@@ -107,6 +125,28 @@ class Population:
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(Nbin-backup), delimiter=' ', comments='')
 
+    @staticmethod
+    def save_sevn_input(name, m1, m2, z1, z2, o1, o2, a, e, tend, tstart,\
+                        dt, sn1, sn2, dtout):
+        """
+        Input: 
+            fname = name of the output (string)
+            m1, m2 = mass of the stars 1 and 2 [Msun] (arrays)
+            z1, z2 = metallicity of the stars 1 and 2 (arrays)
+            o1, o2 = spin of the stars 1 and 2 [1/yr] (arrays)
+            a = binary separation [Rsun] (array)
+            e = binary eccentricity (array)
+            tend = ending time of the simulation [Myr] (float)
+            tstart = starting time of the simulation [Myr] (float)
+            dt = time step of the integration [Myr] (not used)
+            sn1, sn2 = supernova explosion mechanism of the stars (string: _delayed_ / _rapid_ / _startrack_)
+            dtout = time step for printing outputs [Myr] (float)
+        """
+        np.savetxt(name+".in", 
+            np.c_[m1, m2], 
+            fmt=('%4.4f %4.4f'),
+            delimiter=' ', comments='')
+            
     @staticmethod
     def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
         """
