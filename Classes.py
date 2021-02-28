@@ -81,7 +81,7 @@ class Population:
         t = np.full(self.Nbin,tmax)
         ind = np.arange(1,self.Nbin+1,1)
         m1, m2, p, ecc = np.hsplit(self.binaries[['m1','m2','p','ecc']].to_numpy(),4)
-        np.savetxt("mobse_"+name+"_"+met+".in", 
+        np.savetxt(name+"_"+met+".in", 
                 np.c_[ind, m1, m2, p, ecc, Z, t], 
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(self.Nbin-backup), delimiter=' ', comments='')
@@ -102,7 +102,7 @@ class Population:
         Z = np.full(Nbin,float(met))
         t = np.full(Nbin,tmax)
         ind = np.arange(1,Nbin+1,1)
-        np.savetxt("mobse_"+name+"_"+met+".in", 
+        np.savetxt(name+"_"+met+".in", 
                 np.c_[ind, m1, m2, p, ecc, Z, t], 
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(Nbin-backup), delimiter=' ', comments='')
