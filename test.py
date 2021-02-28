@@ -1,19 +1,18 @@
 import Classes
+import numpy 
 
 # test object
-systems = Classes.Population(10000000, 'sana', alphas=[-1.0,-2.7])
-print(systems.alphas, systems.Nstars)
-print(systems.binaries)
+sys = Classes.Population(110, model='SaNa12', alphas=[-1.3,-2.3])
+print(sys.alphas, sys.model, sys.Nstars)
+sys.save_mobse_input('sanaCLASS','0.02',14000)
 
 from Classes import Population as pop
-import numpy as np
 
 # test single functions
-primary = pop.IMF(1000)
-q = pop.mass_ratio(1000)
+primary = pop.IMF(20)
+q = pop.mass_ratio(20)
 secondary = primary * q
-secondary = np.where(secondary < 0.1, 0.1, secondary)
-period = pop.period(1000)
-ecc = pop.eccentricity(1000)
-print(primary, q, secondary, period, ecc)
-
+secondary = numpy.where(secondary < 0.1, 0.1, secondary)
+period = pop.period(20)
+ecc = pop.eccentricity(20)
+pop.save_mobse_input('sanaOWN',primary,secondary,period,ecc,'0.02',14000)

@@ -1,26 +1,34 @@
 import argparse as arg
 import numpy as np
+from numpy.lib.shape_base import hsplit
 import pandas as pd
 import progressbar as pb
 
 class Population:
-# add model to choose between Moe di Stefeno and Sana
-    def __init__(self, number_of_binaries, model, **kwards):
+    def __init__(self, number_of_binaries, **kwards):
 
         self.Nbin = number_of_binaries
         self.Nstars = int(2.*self.Nbin)
-        self.model = model
+        # Update paramenters needed for draw distributions
         self.setup_params(self, kwards)
+        # Upload the method used to save inputs for mobse
+        self.save_mobse_input = self._save_mobse_input
+        # Check for IC model
+        self.model = None
+        if 'model' in kwards:
+            self.model = kwards['model']
+
+        # Build dataframe with minimal info
+        self.binaries = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
+
+        # Select model (if specified)
+        if self.model.lower() == 'sana12':
+            self.Sana_etal12(self)
+        elif self.model.lower() == 'M&DS17':
+            print('Be patiente :) We will implement this model soon')
+        else:
+            print('No model selected! Build your own model.')
         
-        self.binaries = pd.DataFrame(columns=['primary','secondary','period','ecc','separation'])
-
-        if self.model == 'sana':
-            self.Sana_etal12()
-        elif self.model == 'moedistefano':
-            print('We will implent this model soon')
-        elif self.model == None:
-            print('Binaries are ready')
-
     @classmethod
     def setup_params(cls, self, kwards):
         params = {
@@ -43,27 +51,67 @@ class Population:
                 setattr(self, key, kwards[key])
             else:
                 setattr(self, key, params[key])
-    
-    def Sana_etal12(self):
+
+    @classmethod    
+    def Sana_etal12(cls, self):
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
-        self.binaries['primary'] = self.IMF(self.Nbin, self.mass_range, self.alphas)
+        self.binaries['m1'] = self.IMF(self.Nbin, self.mass_range, self.alphas)
         pbar.update((1/5)*100)
         q = self.mass_ratio(self.Nbin, self.q_min, self.q_max, self.q_slope)
         pbar.update((2/5)*100)
-        secondary = self.binaries['primary'] * q
-        self.binaries['secondary'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
+        secondary = self.binaries['m1'] * q
+        self.binaries['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/5)*100)
-        self.binaries['period'] = self.period(self.Nbin, self.P_min, self.P_max, self.P_slope)
+        self.binaries['p'] = self.period(self.Nbin, self.P_min, self.P_max, self.P_slope)
         pbar.update((4/5)*100)
         self.binaries['ecc'] = self.eccentricity(self.Nbin, self.e_min, self.e_max, self.e_slope)
         pbar.finish()   
         # The end
+    
+    # To used pandas dataframe use to define the object
+    def _save_mobse_input(self, name, met, tmax, backup=10):
+        """
+        Input: 
+            fname = name of the output file
+            met = metallicity (string)
+            tmax = max time (float)
+        """
+        Z = np.full(self.Nbin,float(met))
+        t = np.full(self.Nbin,tmax)
+        ind = np.arange(1,self.Nbin+1,1)
+        m1, m2, p, ecc = np.hsplit(self.binaries[['m1','m2','p','ecc']].to_numpy(),4)
+        np.savetxt("mobse_"+name+"_"+met+".in", 
+                np.c_[ind, m1, m2, p, ecc, Z, t], 
+                fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
+                header=str(self.Nbin-backup), delimiter=' ', comments='')
+
+    @staticmethod
+    def save_mobse_input(name, m1, m2, p, ecc, met, tmax, backup=10):
+        """
+        Input: 
+            fname = name of the output file
+            m1 = primary masses (array)
+            m2 = secondary masses (array)
+            p = periods (array)
+            ecc = eccentricity (array)s
+            met = metallicity (string)
+            tmax = max time (float)
+        """
+        Nbin = len(m1)
+        Z = np.full(Nbin,float(met))
+        t = np.full(Nbin,tmax)
+        ind = np.arange(1,Nbin+1,1)
+        np.savetxt("mobse_"+name+"_"+met+".in", 
+                np.c_[ind, m1, m2, p, ecc, Z, t], 
+                fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
+                header=str(Nbin-backup), delimiter=' ', comments='')
 
     @staticmethod
     def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
         """
-        default: f(m) = m^alpha (Kroupa01)
+        Input: Number of stars
+        Default: f(m) = m^alpha (Kroupa01)
                 0.1 <= m <= 0.5   alpha = -1.3
                 0.5 <= m <= 150   alpha = -2.3
         """
@@ -116,6 +164,7 @@ class Population:
     @staticmethod
     def period(Nbin, lower_lim=0.15, upper_lim=3.5, pi=-0.55):
         """
+        Input: Number of binaries        
         default: f(logP) = logP^pi (Sana+12)
                 lower_lim = 0.15
                 upper_lim = 5.5
@@ -130,6 +179,7 @@ class Population:
     @staticmethod
     def eccentricity(Nbin, lower_lim=0.0, upper_lim=0.9999, eta=-0.45):
         """
+        Input: Number of binaries
         default: f(e) = e^eta (Sana+12)
                 lower_lim = 0.0
                 upper_lim = 0.9999
@@ -143,6 +193,7 @@ class Population:
     @staticmethod
     def mass_ratio(Nbin, lower_lim=0.1, upper_lim=1., kappa=-0.1):
         """
+        Input: Number of binaries
         default: f(q) = q^kappa (Sana+12)
                 lower_lim = 0.1
                 upper_lim = 1.
