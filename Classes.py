@@ -202,7 +202,7 @@ class Population:
         return breaks[:-1][indices] * result
 
     @staticmethod
-    def period(Nbin, lower_lim=0.15, upper_lim=3.5, pi=-0.55):
+    def period(Nbin, lower_lim=0.15, upper_lim=5.5, pi=-0.55):
         """
         Input: Number of binaries        
         default: f(logP) = logP^pi (Sana+12)
