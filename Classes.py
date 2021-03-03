@@ -58,15 +58,17 @@ class Population:
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
         self.binaries['m1'] = self.IMF(self.Nbin, self.mass_range, self.alphas)
-        pbar.update((1/5)*100)
+        pbar.update((1/6)*100)
         q = self.mass_ratio(self.Nbin, self.q_min, self.q_max, self.q_slope)
-        pbar.update((2/5)*100)
+        pbar.update((2/6)*100)
         secondary = self.binaries['m1'] * q
         self.binaries['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
-        pbar.update((3/5)*100)
+        pbar.update((3/6)*100)
         self.binaries['p'] = self.period(self.Nbin, self.P_min, self.P_max, self.P_slope)
-        pbar.update((4/5)*100)
+        pbar.update((4/6)*100)
         self.binaries['ecc'] = self.eccentricity(self.Nbin, self.e_min, self.e_max, self.e_slope)
+        pbar.update((5/6)*100)
+        self.binaries['a'] = self.p2a(self.binaries['p'], self.binaries['m1'], self.binaries['m2'])        
         pbar.finish()   
         # The end
     
@@ -103,6 +105,29 @@ class Population:
             np.c_[z1, z2], 
             fmt=('%1.4f %1.4f'),
             delimiter=' ', comments='')
+
+    @staticmethod
+    def a2p(sep,m1,m2):
+        """
+        Compute the period (day) given m1 (Msun), m2 (Msun) 
+        and the separation (Rsun)
+        """
+        yeardy=365.24
+        AURsun=214.95
+        p = ((sep/AURsun)**3./(m1 + m2))**(0.5)
+        return p, p*yeardy
+
+    @staticmethod
+    def p2a(p,m1,m2):
+        """
+        Compute the period (day) given m1 (Msun), m2 (Msun) 
+        and the separation (Rsun)
+        """        
+        yeardy=365.24
+        AURsun=214.95
+        p = p/yeardy
+        a = AURsun*(p*p*(m1 + m2))**(1./3.)
+        return a 
 
     @staticmethod
     def save_mobse_input(name, m1, m2, p, ecc, met, tmax, backup=10):
@@ -244,4 +269,4 @@ class Population:
                 pow(lower_lim,1.+kappa),1./(1.+kappa))
         return q
 
-#class Constants:
+

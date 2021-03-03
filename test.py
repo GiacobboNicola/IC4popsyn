@@ -22,7 +22,6 @@ ecc = pop.eccentricity(Nbin)
 pop.save_mobse_input('mobse_functions',primary,secondary,period,ecc,'0.02',14000)
 sys2 = pd.DataFrame({'m1': primary, 'q':q, 'logP':np.log10(period), 'ecc':ecc})
 
-
 # plot distributions and compare them with theoretical distributions
 import matplotlib.pyplot as plt
 from scipy import integrate
