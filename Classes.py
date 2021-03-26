@@ -59,14 +59,14 @@ class Population:
         pbar = pb.ProgressBar().start()
         self.binaries['m1'] = self.IMF(self.Nbin, self.mass_range, self.alphas)
         pbar.update((1/6)*100)
-        q = self.mass_ratio(self.Nbin, self.q_min, self.q_max, self.q_slope)
+        q = self.power_law(self.Nbin, self.q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
         secondary = self.binaries['m1'] * q
         self.binaries['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/6)*100)
-        self.binaries['p'] = self.period(self.Nbin, self.P_min, self.P_max, self.P_slope)
+        self.binaries['p'] = pow(10.,self.power_law(self.Nbin, self.P_min, self.P_max, self.P_slope))
         pbar.update((4/6)*100)
-        self.binaries['ecc'] = self.eccentricity(self.Nbin, self.e_min, self.e_max, self.e_slope)
+        self.binaries['ecc'] = self.power_law(self.Nbin, self.e_min, self.e_max, self.e_slope)
         pbar.update((5/6)*100)
         self.binaries['a'] = self.p2a(self.binaries['p'], self.binaries['m1'], self.binaries['m2'])        
         pbar.finish()   
@@ -109,8 +109,7 @@ class Population:
     @staticmethod
     def a2p(sep,m1,m2):
         """
-        Compute the period (day) given m1 (Msun), m2 (Msun) 
-        and the separation (Rsun)
+        Compute the period (day) given m1 (Msun), m2 (Msun) and the sep (Rsun)
         """
         yeardy=365.24
         AURsun=214.95
@@ -120,8 +119,7 @@ class Population:
     @staticmethod
     def p2a(p,m1,m2):
         """
-        Compute the period (day) given m1 (Msun), m2 (Msun) 
-        and the separation (Rsun)
+        Compute the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days)
         """        
         yeardy=365.24
         AURsun=214.95
@@ -175,10 +173,14 @@ class Population:
     @staticmethod
     def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
         """
-        Input: Number of stars
-        Default: f(m) = m^alpha (Kroupa01)
-                0.1 <= m <= 0.5   alpha = -1.3
-                0.5 <= m <= 150   alpha = -2.3
+        Input:  
+            Number of stars
+            mass_bouders=[0.1,0.5,150]
+            alphas=[-1.3,-2.3]
+        Default: 
+            f(m) = m^alpha (Kroupa01)
+            0.1 <= m <= 0.5   alpha = -1.3
+            0.5 <= m <= 150   alpha = -2.3
         """
         random = np.random.random
 
@@ -227,46 +229,14 @@ class Population:
         return breaks[:-1][indices] * result
 
     @staticmethod
-    def period(Nbin, lower_lim=0.15, upper_lim=5.5, pi=-0.55):
+    def power_law(N, low, up, eta):
         """
-        Input: Number of binaries        
-        default: f(logP) = logP^pi (Sana+12)
-                lower_lim = 0.15
-                upper_lim = 5.5
-                pi = -0.55
+        Input:  N = number of systems
+                low = lower limit
+                up = upper limit
+                eta = exponent of the power law
         """
-        X = np.random.random(Nbin)
-        logP = pow((pow(upper_lim,1.+pi) - pow(lower_lim,1.+pi)) * X + \
-                pow(lower_lim,1.+pi),1./(1.+pi))
-        period = pow(10.,logP)
-        return period
-
-    @staticmethod
-    def eccentricity(Nbin, lower_lim=0.0, upper_lim=0.9999, eta=-0.45):
-        """
-        Input: Number of binaries
-        default: f(e) = e^eta (Sana+12)
-                lower_lim = 0.0
-                upper_lim = 0.9999
-                eta = -0,45 
-        """
-        X = np.random.random(Nbin)
-        ecc = pow((pow(upper_lim,1.+eta) - pow(lower_lim,1.+eta)) * X + \
-                pow(lower_lim,1.+eta),1./(1.+eta))
-        return ecc
-
-    @staticmethod
-    def mass_ratio(Nbin, lower_lim=0.1, upper_lim=1., kappa=-0.1):
-        """
-        Input: Number of binaries
-        default: f(q) = q^kappa (Sana+12)
-                lower_lim = 0.1
-                upper_lim = 1.
-                kappa = -0.1 
-        """
-        X = np.random.random(Nbin)
-        q = pow((pow(upper_lim,1.+kappa) - pow(lower_lim,1.+kappa)) * X + \
-                pow(lower_lim,1.+kappa),1./(1.+kappa))
-        return q
-
-
+        X = np.random.random(N)
+        Y = pow((pow(up,1.+eta) - pow(low,1.+eta)) * X + \
+                pow(low,1.+eta),1./(1.+eta))
+        return Y

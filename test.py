@@ -13,11 +13,11 @@ sys1.binaries['q'] = sys1.binaries['m2']/sys1.binaries['m1']
 
 # create population from single functions
 primary = pop.IMF(Nbin)
-q = pop.mass_ratio(Nbin)
+q = pop.power_law(Nbin, 0.1, 1, -0.1)
 secondary = primary * q
 secondary = np.where(secondary < 0.1, 0.1, secondary)
-period = pop.period(Nbin)
-ecc = pop.eccentricity(Nbin)
+period = pow(10.,pop.power_law(Nbin, 0.15, 5.5, -0.55))
+ecc = pop.power_law(Nbin, 0., 1, -0.45)
 # save data
 pop.save_mobse_input('mobse_functions',primary,secondary,period,ecc,'0.02',14000)
 sys2 = pd.DataFrame({'m1': primary, 'q':q, 'logP':np.log10(period), 'ecc':ecc})
@@ -66,4 +66,6 @@ for ax,key,bin,scale,a,k,c,t in zip(axs,keys,bins,scales,alphas,consts,colors,te
     ax.set_xlabel(key)
     ax.legend(loc='center right')
 
+#todo: add check fitting the distributions!
+# assert alpha == fitted exponent
 plt.show()
