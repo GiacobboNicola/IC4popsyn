@@ -6,7 +6,7 @@ from scipy.stats import chisquare
 from scipy.optimize import curve_fit
 from classes.ic import Population as pop
 
-def population(N):
+def Sana_population(N):
     # create population of binaries
     sys1 = pop(N, model='SaNa12',mass_range=[5.,150],alphas=[-2.3])
     sys1.binaries['logP'] = np.log10(sys1.binaries['p'])
@@ -45,4 +45,4 @@ def population(N):
     return chis
 
 def test_answer():
-    assert population(10000) < [0.1, 0.1, 0.1, 0.1]
+    assert Sana_population(10000) < [0.1, 0.1, 0.1, 0.1]
