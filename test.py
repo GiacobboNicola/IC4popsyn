@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
-from Classes import Population as pop
+from ic import Population as pop
+from scipy.optimize import curve_fit
+
+def func(x, a, b):
+    return b*x**a
 
 # create population as object
 Nbin = 100000
@@ -33,7 +37,7 @@ keys = ['m1','q','logP','ecc']
 colors = ['C0','C1','C2','C3']
 consts = [8., 1, 0.22, 1.]
 alphas = [-2.3,-0.1,-0.55,-0.45]
-bins = [np.logspace(np.log10(5.),np.log10(150   ),30),30,30,30]
+bins = [np.logspace(np.log10(5.),np.log10(150),30),30,30,30]
 scales = [['log','log'],['linear','linear'],['linear','linear'],['linear','linear']]
 texts = [r'$f(m) \propto m^{-2.3}$ (Kroupa01)', r'$f(q) \propto q^{-0.1}$ (Sana+12)', 
          r'$f(logP) \propto logP^{-0.55}$ (Sana+12)', r'$f(ecc) \propto ecc^{-0.45}$ (Sana+12)']
@@ -41,7 +45,7 @@ texts = [r'$f(m) \propto m^{-2.3}$ (Kroupa01)', r'$f(q) \propto q^{-0.1}$ (Sana+
 # theoretical function
 powerlaw = lambda x, alpha : x**(alpha)
 
-for ax,key,bin,scale,a,k,c,t in zip(axs,keys,bins,scales,alphas,consts,colors,texts):
+for ax,key,bin,scale,a,c,t in zip(axs,keys,bins,scales,alphas,colors,texts):
     low = sys1.binaries[key].min()
     if key == 'ecc':
         low = 0.001
@@ -56,6 +60,12 @@ for ax,key,bin,scale,a,k,c,t in zip(axs,keys,bins,scales,alphas,consts,colors,te
        ax.text(0.1*up, 0.8*np.max(1/k[0]*y), t)
     else:
        ax.text(0.2*up, 0.95*np.max(1/k[0]*y), t)
+
+    # compute fits of the distributions
+    hist, edges = np.histogram(sys1.binaries[key],density=True,bins=bin)
+    centers = 0.5*(edges[1:]+ edges[:-1])
+    pars, cov = curve_fit(func, centers, hist)
+    ax.plot(centers, func(centers, *pars))
 
     # samples
     ax.hist(sys1.binaries[key],histtype='step',density=True,bins=bin,color=c, label='object')

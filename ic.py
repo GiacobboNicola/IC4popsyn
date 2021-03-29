@@ -24,11 +24,12 @@ class Population:
 
         # Select model (if specified)
         if self.model.lower() == 'sana12':
+            print('Building a population of binaries based on Sana+2012 and Kroupa2001')
             self.Sana_etal12(self)
         elif self.model.lower() == 'M&DS17':
-            print('Be patiente :) We will implement this model soon')
+            print('Be patiente, we will implement this model soon')
         else:
-            print('No model selected! Build your own model.')
+            print('No model selected (binaries is empty)! Build your own model.')
         
     @classmethod
     def setup_params(cls, self, kwards):
@@ -72,7 +73,7 @@ class Population:
         pbar.finish()   
         # The end
     
-    # To used pandas dataframe use to define the object
+    # To use pandas dataframe use to define the object
     def _save_mobse_input(self, name, met, tmax, backup=10):
         """
         Input: 
@@ -105,27 +106,6 @@ class Population:
             np.c_[z1, z2], 
             fmt=('%1.4f %1.4f'),
             delimiter=' ', comments='')
-
-    @staticmethod
-    def a2p(sep,m1,m2):
-        """
-        Compute the period (day) given m1 (Msun), m2 (Msun) and the sep (Rsun)
-        """
-        yeardy=365.24
-        AURsun=214.95
-        p = ((sep/AURsun)**3./(m1 + m2))**(0.5)
-        return p, p*yeardy
-
-    @staticmethod
-    def p2a(p,m1,m2):
-        """
-        Compute the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days)
-        """        
-        yeardy=365.24
-        AURsun=214.95
-        p = p/yeardy
-        a = AURsun*(p*p*(m1 + m2))**(1./3.)
-        return a 
 
     @staticmethod
     def save_mobse_input(name, m1, m2, p, ecc, met, tmax, backup=10):
@@ -171,6 +151,27 @@ class Population:
             delimiter=' ', comments='')
             
     @staticmethod
+    def a2p(sep, m1, m2):
+        """
+        Compute the period (day) given m1 (Msun), m2 (Msun) and the sep (Rsun)
+        """
+        yeardy=365.24
+        AURsun=214.95
+        p = ((sep/AURsun)**3./(m1 + m2))**(0.5)
+        return p, p*yeardy
+
+    @staticmethod
+    def p2a(p, m1, m2):
+        """
+        Compute the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days)
+        """        
+        yeardy=365.24
+        AURsun=214.95
+        p = p/yeardy
+        a = AURsun*(p*p*(m1 + m2))**(1./3.)
+        return a 
+        
+    @staticmethod
     def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
         """
         Input:  
@@ -186,8 +187,6 @@ class Population:
 
         breaks = np.array(mass_bouders)
         slopes = np.array(alphas)
-
-        mass_max = breaks[-1]
 
         bins = len(slopes)
 
