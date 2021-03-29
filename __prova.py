@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
-from ic import Population as pop
+import matplotlib.pyplot as plt
+from classes.ic import Population as pop
 from scipy.optimize import curve_fit
+from scipy.stats import chisquare
 
 def func(x, a, b):
     return b*x**a
@@ -43,7 +45,7 @@ texts = [r'$f(m) \propto m^{-2.3}$ (Kroupa01)', r'$f(q) \propto q^{-0.1}$ (Sana+
          r'$f(logP) \propto logP^{-0.55}$ (Sana+12)', r'$f(ecc) \propto ecc^{-0.45}$ (Sana+12)']
 
 # theoretical function
-powerlaw = lambda x, alpha : x**(alpha)
+powerlaw = lambda x, alpha, b : b*x**(alpha)
 
 for ax,key,bin,scale,a,c,t in zip(axs,keys,bins,scales,alphas,colors,texts):
     low = sys1.binaries[key].min()
@@ -53,9 +55,9 @@ for ax,key,bin,scale,a,c,t in zip(axs,keys,bins,scales,alphas,colors,texts):
     # theoratical distributions
     up = sys1.binaries[key].max()
     x = np.linspace(low,up)
-    k = integrate.quad(powerlaw, low, up, args=(a))
-    y = powerlaw(x,a)
-    ax.plot(x,1/k[0]*y,c='k')
+    k = integrate.quad(powerlaw, low, up, args=(a,1))
+    y = powerlaw(x,a,1/k[0]) # normalization
+    ax.plot(x,y,c='k')
     if key == 'm1':
        ax.text(0.1*up, 0.8*np.max(1/k[0]*y), t)
     else:
@@ -66,7 +68,10 @@ for ax,key,bin,scale,a,c,t in zip(axs,keys,bins,scales,alphas,colors,texts):
     centers = 0.5*(edges[1:]+ edges[:-1])
     pars, cov = curve_fit(func, centers, hist)
     ax.plot(centers, func(centers, *pars))
-
+    y = powerlaw(centers,a,1/k[0])
+    chi, _ = chisquare(hist, y)
+    print(chi)
+    
     # samples
     ax.hist(sys1.binaries[key],histtype='step',density=True,bins=bin,color=c, label='object')
     ax.hist(sys2[key],histtype='stepfilled',alpha=0.2,density=True,bins=bin,color=c, label='functions')

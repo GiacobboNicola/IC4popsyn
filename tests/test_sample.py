@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-from ic import Population as pop
+import matplotlib.pyplot as plt
 from scipy import integrate
 from scipy.stats import chisquare
 from scipy.optimize import curve_fit
+from classes.ic import Population as pop
 
 def population(N):
     # create population of binaries
@@ -23,30 +24,25 @@ def population(N):
     texts = [r'$f(m) \propto m^{-2.3}$ (Kroupa01)', r'$f(q) \propto q^{-0.1}$ (Sana+12)', 
             r'$f(logP) \propto logP^{-0.55}$ (Sana+12)', r'$f(ecc) \propto ecc^{-0.45}$ (Sana+12)']
 
+    chis = []
+
     # theoretical function
-    powerlaw = lambda x, alpha, b, c : b*x**(alpha) + c
+    powerlaw = lambda x, alpha, b : b*x**(alpha)
 
     for ax,key,bin,scale,a,c,t in zip(axs,keys,bins,scales,alphas,colors,texts):
-        low = sys1.binaries[key].min()
-        if key == 'ecc':
-            low = 0.001
-        
+
         # compute fits of the distributions
-        hist, edges = np.histogram(sys1.binaries[key],histtype='step',density=True,bins=bin,color=c, label='object')
+        hist, edges = np.histogram(sys1.binaries[key], density=True, bins=bin)
         centers = 0.5*(edges[1:]+ edges[:-1])
-        pars, cov = curve_fit(pawerlaw, centers, hist)
+        pars, cov = curve_fit(powerlaw, centers, hist)
 
         # theoratical distributions
-        k = integrate.quad(powerlaw, centers[0], centers[-1], args=(a,1,0))
-        y = powerlaw(centers,a,1,0)
-        ax.plot(x,1/k[0]*y,c='k')
-        if key == 'm1':
-            ax.text(0.1*up, 0.8*np.max(1/k[0]*y), t)
-        else:
-            ax.text(0.2*up, 0.95*np.max(1/k[0]*y), t)
+        k = integrate.quad(powerlaw, centers[0], centers[-1], args=(a,1))
+        y = powerlaw(centers,a,1/k[0])
 
-    
-    return chisquare(hist, y)
+        chi, _ = chisquare(hist, y)
+        chis.append(chi)
+    return chis
 
 def test_answer():
-    assert population(10000) < 0.5
+    assert population(10000) < [0.1, 0.1, 0.1, 0.1]
