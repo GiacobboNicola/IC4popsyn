@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import integrate
 from scipy.stats import chisquare
 from scipy.optimize import curve_fit
-from classes.ic import Population as pop
+from populations.ic import Population as pop
 
 def Sana_population(N):
     # create population of binaries
