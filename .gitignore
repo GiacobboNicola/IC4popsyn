@@ -1,6 +1,8 @@
 # my own rubbish
 mobse*
 
+# vscode setting
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
