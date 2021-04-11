@@ -2,7 +2,11 @@
 This is a python module that helps you (or at least, that's what I hope) in building initial conditions for population-synthesis simulations (e.g. for [**MOBSE**](https://mobse-webpage.netlify.app/about/) and/or **SEVN**).
 
 ## Options
-There are many options that allow the user to build it own model. Here are listed the default values of each parameter that can be modified. 
+By now I have implemented two models:
+1. `sana12`: it's based on [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)
+2. `sana_eccm&ds`: it's still based on *Sana+12* but the eccentricity are compute following eq. 3 in [M&DS2017](https://iopscience.iop.org/article/10.3847/1538-4365/aa6fb6/pdf).
+
+However, there are many options that allow the user to build it own model. Here are listed the default values of each parameter that can be modified. 
 * `alphas` = [-1.3,-2.3]: represents the slope of the broken power-law used as IMF.    
 * `mass_range` = [0.1,0.5,150]: identify the mass ranges of the different power-laws (note that *dim(mass_range) = dim(alphas) + 1*).  
 * `logP_min` = 0.15: lower limit for the period.  
