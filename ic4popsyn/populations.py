@@ -48,13 +48,13 @@ class Binaries:
             'logP_max': 5.5,
             'logP_slope': -0.55,
             'e_min': 0.0,
+            'e_max': 0.9999,
             'e_slope': -0.45,
             'q_min': 0.1,
             'q_max': 1.0,
             'q_slope': -0.1,
             'mass_min': 0.1
         }
-        params['e_max'] = tools.eccvsP(10.**params['logP_max']) # eq.3 in M&DS17
 
         for key in params.keys():
             if key in kwards:
