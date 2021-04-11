@@ -23,8 +23,8 @@ The `example.py` script is a simple example of how to use this module. It produc
 
 ## Test
 I prepared some tests that can be run with *pytest*. Typing `pytest` on the command line you should obtain something like  
-[img](img/cml.png)
+![img](img/cml.png)
 
 and two `matplotlib` windows. One will show the distributions for the [*sana_12*](img/sana.png) model and the other the eccentricity vs period according to the [*sana_eccM&DS*](img/eccM&DS.png) model.  
-[img](img/sana.png)  
-[img](img/eccM&DS.png)
+![img](img/sana.png)  
+![img](img/eccM&DS.png)
