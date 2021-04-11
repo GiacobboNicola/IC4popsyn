@@ -21,7 +21,7 @@ class Binaries:
         self.save_sevn_input = self._save_sevn_input
         # Check for IC model
         if 'model' in kwards:
-            self.model = kwards['model']
+            self.model = kwards['model'].lower()
         else:
             self.model = 'None'
 
@@ -29,10 +29,12 @@ class Binaries:
         self.population = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
 
         # Select model (if specified)
-        if self.model.lower() in ['sana12','sana_eccm&ds']:
+        if self.model in ['sana12','sana_eccm&ds']:
             print('Building a population of binaries based on Sana+2012 and Kroupa2001')
+            if self.model == 'sana_eccm&ds':
+                print('Building a population of binaries based on Sana+2012, Kroupa2001 and Moe&DiStefano 2017')
             self.Sana_etal12(self)
-        elif self.model.lower() == 'M&DS17':
+        elif self.model == 'M&DS17':
             print('Be patiente, we will implement this model soon')
         else:
             print('No model selected (binaries is empty)! Build your own model.')
@@ -76,7 +78,7 @@ class Binaries:
         pbar.update((3/6)*100)
         self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
         pbar.update((4/6)*100)
-        if self.model.lower() == 'sana_eccm&ds':
+        if self.model == 'sana_eccm&ds':
             Pecc = np.where(self.population['p'] < 2., 2.1, self.population['p'])
             eccMax = tools.eccvsP(Pecc)
             self.population['ecc'] = tools.vec_power_law(self.e_min, eccMax, self.e_slope)
