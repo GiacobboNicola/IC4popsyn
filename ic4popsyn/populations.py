@@ -6,8 +6,8 @@ import numpy as np
 from numpy.lib.shape_base import hsplit
 import pandas as pd
 import progressbar as pb
-from ic4popsyn_pkg import populations as pop
-from ic4popsyn_pkg import ic
+from ic4popsyn import populations as pop
+from ic4popsyn import tools
 
 class Binaries:
     def __init__(self, number_of_binaries, **kwards):
@@ -29,30 +29,30 @@ class Binaries:
         self.population = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
 
         # Select model (if specified)
-        if self.model.lower() == 'sana12':
+        if self.model.lower() in ['sana12','sana_eccm&ds']:
             print('Building a population of binaries based on Sana+2012 and Kroupa2001')
             self.Sana_etal12(self)
         elif self.model.lower() == 'M&DS17':
             print('Be patiente, we will implement this model soon')
         else:
             print('No model selected (binaries is empty)! Build your own model.')
-        
+
     @classmethod
     def setup_params(cls, self, kwards):
         params = {
             'alphas':[-1.3,-2.3],
             'mass_range':[0.1,0.5,150],
-            'P_min': 0.15,
-            'P_max': 5.5,
-            'P_slope': -0.55,
+            'logP_min': 0.15,
+            'logP_max': 5.5,
+            'logP_slope': -0.55,
             'e_min': 0.0,
-            'e_max': 0.9999,
             'e_slope': -0.45,
             'q_min': 0.1,
             'q_max': 1.0,
             'q_slope': -0.1,
             'mass_min': 0.1
         }
+        params['e_max'] = tools.eccvsP(10.**params['logP_max']) # eq.3 in M&DS17
 
         for key in params.keys():
             if key in kwards:
@@ -67,18 +67,23 @@ class Binaries:
         """
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
-        self.population['m1'] = ic.IMF(self.Nbin, self.mass_range, self.alphas)
+        self.population['m1'] = tools.IMF(self.Nbin, self.mass_range, self.alphas)
         pbar.update((1/6)*100)
-        q = ic.power_law(self.Nbin, self.q_min, self.q_max, self.q_slope)
+        q = tools.power_law(self.Nbin, self.q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
         secondary = self.population['m1'] * q
         self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/6)*100)
-        self.population['p'] = pow(10.,ic.power_law(self.Nbin, self.P_min, self.P_max, self.P_slope))
+        self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
         pbar.update((4/6)*100)
-        self.population['ecc'] = ic.power_law(self.Nbin, self.e_min, self.e_max, self.e_slope)
+        if self.model.lower() == 'sana_eccm&ds':
+            Pecc = np.where(self.population['p'] < 2., 2.1, self.population['p'])
+            eccMax = tools.eccvsP(Pecc)
+            self.population['ecc'] = tools.vec_power_law(self.e_min, eccMax, self.e_slope)
+        else:
+            self.population['ecc'] = tools.power_law(self.Nbin, self.e_min, self.e_max, self.e_slope)
         pbar.update((5/6)*100)
-        self.population['a'] = ic.p2a(self.population['p'], self.population['m1'], self.population['m2'])        
+        self.population['a'] = tools.p2a(self.population['p'], self.population['m1'], self.population['m2'])        
         pbar.finish()   
         # The end
     
@@ -94,11 +99,11 @@ class Binaries:
             __________________________________
             | nd | m1 | m2 | p | ecc | Z | t |
         """
-        Z = np.full(self.Nbin,float(met))
-        t = np.full(self.Nbin,tmax)
-        ind = np.arange(1,self.Nbin+1,1)
+        Z = np.full(self.Nbin, met)
+        t = np.full(self.Nbin, tmax)
+        ind = np.arange(1,self.Nbin+1,1)            
         m1, m2, p, ecc = np.hsplit(self.population[['m1','m2','p','ecc']].to_numpy(),4)
-        np.savetxt(name+"_"+met+".in", 
+        np.savetxt(name+"_"+str(met)+".in", 
                 np.c_[ind, m1, m2, p, ecc, Z, t], 
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(self.Nbin-backup), delimiter=' ', comments='')

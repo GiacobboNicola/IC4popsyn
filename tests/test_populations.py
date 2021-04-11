@@ -1,9 +1,16 @@
+"""
+Test the sample of the Sana+12 distributions with a Kroupa IMF:
+f(m) ~ m^{-2.3} 
+f(q) ~ q^{-0.1}
+f(logP) ~ logP^{-0.55}
+f(ecc) ~ ecc^{-0.45}
+"""
 import numpy as np
 from scipy import integrate
 from scipy.stats import chisquare
 from scipy.optimize import curve_fit
-from ic4popsyn_pkg import ic
-from ic4popsyn_pkg import populations as pop
+from ic4popsyn import tools
+from ic4popsyn import populations as pop
 
 def Sana_population(N):
     # create population of binaries

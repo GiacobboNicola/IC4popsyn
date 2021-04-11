@@ -87,3 +87,14 @@ def power_law(N, low, up, eta):
     Y = pow((pow(up,1.+eta) - pow(low,1.+eta)) * X + \
             pow(low,1.+eta),1./(1.+eta))
     return Y
+
+def vec_power_law(low, up, eta):
+    _vec_power_law = np.vectorize(power_law)
+    return _vec_power_law(1,low,up,eta)
+
+def eccvsP(P):
+    """
+    Eccentricity as a function of the period (eq. 3 in M&DS2017).
+    P must be in days.
+    """
+    return 1 - (P / 2.)**(-2./3.) # eq.3 in M&DS17
