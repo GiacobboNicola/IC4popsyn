@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "/opt/anaconda3/envs/work/bin/python",
-    "python.testing.pytestArgs": [
-        "classes"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true
-}
