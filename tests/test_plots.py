@@ -60,7 +60,7 @@ def SanaMDS_plots(Nbin):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=[10,5])
 
     # theoretical function
-    x = np.logspace(1,5.5,1000)
+    x = np.logspace(np.log10(2),5.5,1000)
     y = tools.eccvsP(x)
     ax.plot(x,y,c='r', lw=3, label='Theo. distr.')
     # samples
