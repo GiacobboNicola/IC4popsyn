@@ -6,5 +6,7 @@ Nbin = 1000010
 binSana = pop.Binaries(Nbin, model='sana12', mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
 binSanaMDS = pop.Binaries(Nbin, model='sana_eccM&DS', mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
 # save the population as input for MOBSE 
-binSana.save_mobse_input('mobseInputS.in', 0.02, 13600, 10) # with 10 system used for backup
-binSanaMDS.save_mobse_input('mobseInputMDS.in', 0.02, 13600, 10) # with 10 system used for backup
+binSana.save_mobse_input('mobseInputS_Z', 0.02, 13600, 10) # with 10 system used for backup
+binSanaMDS.save_mobse_input('mobseInputMDS_Z', 0.02, 13600, 10) # with 10 system used for backup
+
+binSanaMDS.save_sevn_input('SEVNInputMDS_Z', 0.02, 0.02, 0.0, 0.0, 1000, 0.1, 'delayed', 'delayed', 1)

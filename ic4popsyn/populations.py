@@ -35,7 +35,7 @@ class Binaries:
                 print('Building a population of binaries based on Sana+2012, Kroupa2001 and Moe&DiStefano 2017')
             self.Sana_etal12(self)
         elif self.model == 'M&DS17':
-            print('Be patiente, we will implement this model soon')
+            print('Be patient, we will implement this model soon')
         else:
             print('No model selected (binaries is empty)! Build your own model.')
 
@@ -110,25 +110,67 @@ class Binaries:
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(self.Nbin-backup), delimiter=' ', comments='')
 
-    def _save_sevn_input(self, name, z1, z2, o1, o2, tend, tstart,\
-                        dt, sn1, sn2, dtout):
+    def _save_sevn_input(self, name, z1, z2, o1, o2, tend, tstart1, \
+                         sn1, sn2, dtout, tstart2=None, dt=None, Sevn_v=2):
         """
         It saves a population in a file (SEVN format).
         Input: 
             z1, z2 = metallicity of the stars 1 and 2 (arrays)
             o1, o2 = spin of the stars 1 and 2 [1/yr] (arrays)
             tend = ending time of the simulation [Myr] (float)
-            tstart = starting time of the simulation [Myr] (float)
+            tstart1 = starting time of the simulation [Myr] (float)
             dt = time step of the integration [Myr] (not used)
             sn1, sn2 = supernova explosion mechanism of the stars (string: _delayed_ / _rapid_ / _startrack_)
             dtout = time step for printing outputs [Myr] (float)
         Output:
             ...
         """
-        np.savetxt(name+".in", 
-            np.c_[z1, z2], 
-            fmt=('%1.4f %1.4f'),
-            delimiter=' ', comments='')
+
+        M1 = self.population['m1'].values
+        M2 = self.population['m2'].values
+        A = self.population['a'].values
+        E = self.population['ecc'].values
+        # SN1 = np.full(self.Nbin, sn1)
+        
+        with open(name+"_"+str(z1)+".in", mode='w') as f:
+            
+            if Sevn_v == 1:
+                
+                if not dt:
+                    dt = 0.1
+                
+                for i in range(self.Nbin):
+                    line = f'{M1[i]:10.3f} {M2[i]:10.3f}' \
+                           f'{z1:10.3f} {z2:10.3f}' \
+                           f'{o1:10.2f} {o2:10.2f}' \
+                           f'{A[i]:10.3f} {E[i]:10.3f}' \
+                           f'{tend:10.3f} {tstart1:10.3f}' \
+                           f'{dt:10.3f} {sn1:>10}' \
+                           f'{sn2:>10} {dtout:10.3f}'
+
+                    print(line, file=f)
+            
+            elif Sevn_v == 2:
+                
+                if not tstart2:
+                    tstart2 = tstart1
+
+                for i in range(self.Nbin):
+                    line = f'{M1[i]:10.3f} {z1:10.3f}' \
+                           f'{o1:10.2f} {sn1:>10}' \
+                           f'{tstart1:10.3f} {M2[i]:10.3f}' \
+                           f'{z2:10.3f} {o2:10.2f}' \
+                           f'{sn2:>10} {tstart2:10.3f}' \
+                           f'{A[i]:10.3f} {E[i]:10.3f}' \
+                           f'{tend:10.3f} {dtout:10.3f}'
+
+                    print(line, file=f)
+
+        # np.savetxt(name+".in", 
+        #     np.c_[M1, M2, A, E, SN1], #, SN2, DTOUT], 
+        #     fmt=('%10s'),
+        #     delimiter=' ', comments='')
+        return
 
     @staticmethod
     def save_mobse_input(name, m1, m2, p, ecc, met, tmax, backup=10):
