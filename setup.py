@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 setup(
-    name='IC4popsyn',
+    name='ic4popsyn',
     version='1.0.0',
     author='Nicola Giacobbo',
     author_email='giuliano.iorio@unibo.it',
