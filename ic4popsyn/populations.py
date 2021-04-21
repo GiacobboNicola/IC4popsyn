@@ -131,6 +131,25 @@ class Binaries:
         A = self.population['a'].values
         E = self.population['ecc'].values
         # SN1 = np.full(self.Nbin, sn1)
+
+        #Set placeholder
+        placeholder="xxx"
+        if z1 is None:
+            z1 = placeholder
+        if z2 is None:
+            z2 = placeholder
+        if tend is None:
+            tend = placeholder
+        if tstart1 is None:
+            tstart1 = placeholder
+        if sn1 is None:
+            sn1 = placeholder
+        if sn2 is None:
+            sn2 = placeholder
+        if dtout is None:
+            dtout = placeholder
+
+
         
         # to remove eventual 1 due to formatting round process
         E[E > 0.999] = 0.999
