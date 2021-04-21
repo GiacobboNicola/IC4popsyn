@@ -9,4 +9,4 @@ binSanaMDS = pop.Binaries(Nbin, model='sana_eccM&DS', mass_range=[5.,150.], alph
 binSana.save_mobse_input('mobseInputS_Z', 0.02, 13600, 10) # with 10 system used for backup
 binSanaMDS.save_mobse_input('mobseInputMDS_Z', 0.02, 13600, 10) # with 10 system used for backup
 
-binSanaMDS.save_sevn_input('SEVNInputMDS_Z', 0.02, 0.02, 0.0, 0.0, 1000, 0.1, 'delayed', 'delayed', 1)
+binSanaMDS.save_sevn_input('SEVNInputMDS_Z', 0.02, 0.02, 0.0, 0.0, 'end', 0.6, 'delayed', 'delayed', 'end')

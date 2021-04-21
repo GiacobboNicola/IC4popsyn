@@ -132,6 +132,16 @@ class Binaries:
         E = self.population['ecc'].values
         # SN1 = np.full(self.Nbin, sn1)
         
+        # to remove eventual 1 due to formatting round process
+        E[E > 0.999] = 0.999
+
+        # tend and dtout could be either strings or floats
+        if type(tend) != str:
+            tend = str(round(tend, 3))
+
+        if type(dtout) != str: 
+            dtout = str(round(dtout, 3))
+        
         with open(name+"_"+str(z1)+".in", mode='w') as f:
             
             if Sevn_v == 1:
@@ -144,9 +154,9 @@ class Binaries:
                            f'{z1:10.3f} {z2:10.3f}' \
                            f'{o1:10.2f} {o2:10.2f}' \
                            f'{A[i]:10.3f} {E[i]:10.3f}' \
-                           f'{tend:10.3f} {tstart1:10.3f}' \
+                           f'{tend:>10} {tstart1:10.3f}' \
                            f'{dt:10.3f} {sn1:>10}' \
-                           f'{sn2:>10} {dtout:10.3f}'
+                           f'{sn2:>10} {dtout:>10}'
 
                     print(line, file=f)
             
@@ -161,14 +171,17 @@ class Binaries:
                            f'{tstart1:10.3f} {M2[i]:10.3f}' \
                            f'{z2:10.3f} {o2:10.2f}' \
                            f'{sn2:>10} {tstart2:10.3f}' \
-                           f'{A[i]:10.3f} {E[i]:10.3f}' \
-                           f'{tend:10.3f} {dtout:10.3f}'
+                           f'{A[i]:12.3g} {E[i]:12.3g}' \
+                           f'{tend:>10} {dtout:>10}'
 
                     print(line, file=f)
 
+        # SN1 = np.array(SN1, dtype=str)
+        # tmp_arr = np.array(np.vstack([M1, M2, A, E, SN1]).T, dtype=str)
+        # print(tmp_arr)
         # np.savetxt(name+".in", 
-        #     np.c_[M1, M2, A, E, SN1], #, SN2, DTOUT], 
-        #     fmt=('%10s'),
+        #     tmp_arr, #, SN2, DTOUT], 
+        #     fmt='%4.4f %4.4f %4.4f %4.4f %10s',
         #     delimiter=' ', comments='')
         return
 
