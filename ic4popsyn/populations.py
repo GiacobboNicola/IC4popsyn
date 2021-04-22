@@ -110,8 +110,8 @@ class Binaries:
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(self.Nbin-backup), delimiter=' ', comments='')
 
-    def _save_sevn_input(self, name, z1, z2, o1, o2, tend, tstart1, \
-                         sn1, sn2, dtout, tstart2=None, dt=None, Sevn_v=2):
+    def _save_sevn_input(self, name, z1=None, z2=None, o1=0.0, o2=0.0, tend=None, tstart1=None, \
+                         sn1=None, sn2=None, dtout=None, tstart2=None, dt=None, Sevn_v=2):
         """
         It saves a population in a file (SEVN format).
         Input: 
@@ -154,12 +154,14 @@ class Binaries:
         # to remove eventual 1 due to formatting round process
         E[E > 0.999] = 0.999
 
-        # tend and dtout could be either strings or floats
-        if type(tend) != str:
-            tend = str(round(tend, 3))
+        # transform values to string since in SEVN they can be either strings or floats
+        tostring = [z1,z2,o1,o2,tend,tstart1,sn1,sn2,dtout,tstart2]
 
-        if type(dtout) != str: 
-            dtout = str(round(dtout, 3))
+        for ith, i in enumerate(tostring):
+            if type(i) == float:
+                tostring[ith] = str(round(i, 3))
+
+        z1,z2,o1,o2,tend,tstart1,sn1,sn2,dtout,tstart2 = tostring
         
         with open(name+"_"+str(z1)+".in", mode='w') as f:
             
@@ -170,10 +172,10 @@ class Binaries:
                 
                 for i in range(self.Nbin):
                     line = f'{M1[i]:10.3f} {M2[i]:10.3f}' \
-                           f'{z1:10.3f} {z2:10.3f}' \
-                           f'{o1:10.2f} {o2:10.2f}' \
+                           f'{z1:>10} {z2:>10}' \
+                           f'{o1:>10} {o2:>10}' \
                            f'{A[i]:10.3f} {E[i]:10.3f}' \
-                           f'{tend:>10} {tstart1:10.3f}' \
+                           f'{tend:>10} {tstart1:>10}' \
                            f'{dt:10.3f} {sn1:>10}' \
                            f'{sn2:>10} {dtout:>10}'
 
@@ -185,11 +187,11 @@ class Binaries:
                     tstart2 = tstart1
 
                 for i in range(self.Nbin):
-                    line = f'{M1[i]:10.3f} {z1:10.3f}' \
-                           f'{o1:10.2f} {sn1:>10}' \
-                           f'{tstart1:10.3f} {M2[i]:10.3f}' \
-                           f'{z2:10.3f} {o2:10.2f}' \
-                           f'{sn2:>10} {tstart2:10.3f}' \
+                    line = f'{M1[i]:10.3f} {z1:>10}' \
+                           f'{o1:>10} {sn1:>10}' \
+                           f'{tstart1:>10} {M2[i]:10.3f}' \
+                           f'{z2:>10} {o2:>10}' \
+                           f'{sn2:>10} {tstart2:>10}' \
                            f'{A[i]:12.3g} {E[i]:12.3g}' \
                            f'{tend:>10} {dtout:>10}'
 
