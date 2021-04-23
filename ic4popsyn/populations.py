@@ -95,7 +95,7 @@ class Binaries:
         It saves a population in a file (MOBSE format).
         Input: 
             fname = name of the output file
-            met = metallicity (string)
+            met = metallicity (float)
             tmax = max time (float)
         Output:
             __________________________________
@@ -216,7 +216,7 @@ class Binaries:
             m2 = secondary masses (array)
             p = periods (array)
             ecc = eccentricity (array)
-            met = metallicity (string)
+            met = metallicity (float)
             tmax = max time (float)
         Output:
             __________________________________
@@ -226,7 +226,7 @@ class Binaries:
         Z = np.full(Nbin,float(met))
         t = np.full(Nbin,tmax)
         ind = np.arange(1,Nbin+1,1)
-        np.savetxt(name+"_"+met+".in", 
+        np.savetxt(name+"_"+str(met)+".in", 
                 np.c_[ind, m1, m2, p, ecc, Z, t], 
                 fmt=('%i %4.4f %4.4f %10.4f %1.4f %1.4f %6.1f'),
                 header=str(Nbin-backup), delimiter=' ', comments='')

@@ -2,6 +2,9 @@
 mobse*
 SEVN*
 
+# Apple hidden file 
+.DS_Store
+
 # vscode setting
 .vscode
 
