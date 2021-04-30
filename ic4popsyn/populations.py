@@ -10,10 +10,11 @@ from ic4popsyn import populations as pop
 from ic4popsyn import tools
 
 class Binaries:
-    def __init__(self, number_of_binaries, **kwards):
+    def __init__(self, number_of_binaries, single_pop=False, **kwards):
 
         self.Nbin = number_of_binaries
         self.Nstars = int(2.*self.Nbin)
+        self.single_pop = single_pop
         # Update paramenters needed for draw distributions
         self.setup_params(self, kwards)
         # Upload the method used to save inputs for our pop-syn
@@ -24,9 +25,12 @@ class Binaries:
             self.model = kwards['model'].lower()
         else:
             self.model = 'None'
-
+        
         # Build dataframe with minimal info
-        self.population = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
+        if single_pop:
+            self.population = pd.DataFrame(columns=['m1'])
+        else:
+            self.population = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
 
         # Select model (if specified)
         if self.model in ['sana12','sana_eccm&ds']:
@@ -70,6 +74,11 @@ class Binaries:
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
         self.population['m1'] = tools.IMF(self.Nbin, self.mass_range, self.alphas)
+        
+        if self.single_pop: #if True returns only population['m1']
+            pbar.finish()
+            return
+
         pbar.update((1/6)*100)
         q = tools.power_law(self.Nbin, self.q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
@@ -101,6 +110,12 @@ class Binaries:
             __________________________________
             | nd | m1 | m2 | p | ecc | Z | t |
         """
+
+        if self.single_pop:
+            print("\nSingle population print to file only supported for SEVN input style.")
+            print("Please consider to turn single_pop argument to True.\n")
+            return
+
         Z = np.full(self.Nbin, met)
         t = np.full(self.Nbin, tmax)
         ind = np.arange(1,self.Nbin+1,1)            
@@ -126,12 +141,6 @@ class Binaries:
             ...
         """
 
-        M1 = self.population['m1'].values
-        M2 = self.population['m2'].values
-        A = self.population['a'].values
-        E = self.population['ecc'].values
-        # SN1 = np.full(self.Nbin, sn1)
-
         #Set placeholder
         placeholder="xxx"
         if z1 is None:
@@ -149,11 +158,6 @@ class Binaries:
         if dtout is None:
             dtout = placeholder
 
-
-        
-        # to remove eventual 1 due to formatting round process
-        E[E > 0.999] = 0.999
-
         # transform values to string since in SEVN they can be either strings or floats
         tostring = [z1,z2,o1,o2,tend,tstart1,sn1,sn2,dtout,tstart2]
 
@@ -162,10 +166,29 @@ class Binaries:
                 tostring[ith] = str(round(i, 3))
 
         z1,z2,o1,o2,tend,tstart1,sn1,sn2,dtout,tstart2 = tostring
+
+        M1 = self.population['m1'].values
+        if not self.single_pop:
+            M2 = self.population['m2'].values
+            A = self.population['a'].values
+            E = self.population['ecc'].values
+
+            # to remove eventual 1 due to formatting round process
+            E[E > 0.999] = 0.999
+
         
         with open(name+"_"+str(z1)+".in", mode='w') as f:
             
-            if Sevn_v == 1:
+            if self.single_pop:
+                for i in range(self.Nbin):
+                    line = f'{M1[i]:10.3f} {z1:>10}' \
+                           f'{o1:>10} {sn1:>10}' \
+                           f'{tstart1:>10}' \
+                           f'{tend:>10} {dtout:>10}'
+
+                    print(line, file=f)
+            
+            elif Sevn_v == 1:
                 
                 if not dt:
                     dt = 0.1
