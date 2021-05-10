@@ -1,4 +1,66 @@
 import numpy as np
+# mandatory for GetFromUrl 
+import subprocess
+import os 
+import tarfile
+
+class GetFromUrl:
+    
+    def __init__(self, name="mobse"):
+        if name.lower() == 'mobse':
+            self.version = "v1.0" #It will be active in the next future
+            self.sourcename =  'source-code-'+self.version
+            self.url = 'https://gitlab.com/mobse/source-code/-/archive/v1.0/source-code-v1.0.tar.gz'
+            self.name = name
+        if name.lower() == 'sevn':
+            print('WARNIG: SEVN is still not publicly available.')
+            self.version = "v1." #It will be active in the next future
+            self.sourcename = self.version
+            self.url = 'https://github.com/GiacobboNicola/IC4popsyn/archive/refs/tags/v0.1.tar.gz'
+            self.name = name
+
+
+    def directory(self):
+        maindir = os.path.abspath(os.path.dirname(__file__))
+        subdir = os.path.join(maindir, self.name)
+        return subdir
+    
+    def tar_from_url(self):
+        subprocess.run(["curl","-L","-O",self.url])
+        #subprocess.run(["wget",self.url])
+
+    def rename_dir(self):
+        path_to_save = ''
+        if os.path.exists(path_to_save+self.name):
+            print(f"WARNING: {self.name} already exists! We are renaming it!")
+            counter = 0
+            while os.path.exists(path_to_save+self.name+'_n{0}'.format(counter)):
+                counter += 1
+                if counter > 2: 
+                    print("    |----> Be carefull! Too many copy of the folder.")
+            os.rename(path_to_save+self.name, path_to_save+self.name+'_n{0}'.format(counter))
+        os.rename(self.sourcename, self.name)
+        
+    def main(self):
+        print("-----------------------------------------------------------------------------------")
+        print("downloading version", self.version) 
+        print("from", self.url) 
+        print("to", self.directory())
+        print("-----------------------------------------------------------------------------------")
+
+        self.tar_from_url()
+
+        tar = tarfile.open(self.sourcename+'.tar.gz', 'r:gz')
+        os.remove(self.sourcename+'.tar.gz')
+
+        tar.extractall()
+        tar.close()
+
+        self.rename_dir()
+
+        print("download completed")
+        print("-----------------------------------------------------------------------------------\n")
+
 
 def a2p(sep, m1, m2):
     """

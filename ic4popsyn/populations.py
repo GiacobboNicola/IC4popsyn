@@ -6,7 +6,7 @@ import numpy as np
 from numpy.lib.shape_base import hsplit
 import pandas as pd
 import progressbar as pb
-from ic4popsyn import populations as pop
+# this package and necessary for Binaries
 from ic4popsyn import tools
 
 class Binaries:
