@@ -177,7 +177,7 @@ class Binaries:
             E[E > 0.999] = 0.999
 
         
-        with open(name+"_"+str(z1)+".in", mode='w') as f:
+        with open(name+"_"+z1+".in", mode='w') as f:
             
             if self.single_pop:
                 for i in range(self.Nbin):
