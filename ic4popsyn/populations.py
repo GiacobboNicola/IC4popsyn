@@ -167,21 +167,20 @@ class Binaries:
 
         z1,z2,o1,o2,tend,tstart1,sn1,sn2,dtout,tstart2 = tostring
 
-        M1 = self.population['m1'].values
+        m1 = self.population['m1'].values
         if not self.single_pop:
-            M2 = self.population['m2'].values
-            A = self.population['a'].values
-            E = self.population['ecc'].values
+            m2 = self.population['m2'].values
+            a = self.population['a'].values
+            ecc = self.population['ecc'].values
 
             # to remove eventual 1 due to formatting round process
-            E[E > 0.999] = 0.999
-
+            ecc[ecc > 0.999] = 0.999
         
         with open(name+"_"+z1+".in", mode='w') as f:
             
             if self.single_pop:
                 for i in range(self.Nbin):
-                    line = f'{M1[i]:10.3f} {z1:>10}' \
+                    line = f'{m1[i]:10.3f} {z1:>10}' \
                            f'{o1:>10} {sn1:>10}' \
                            f'{tstart1:>10}' \
                            f'{tend:>10} {dtout:>10}'
@@ -194,10 +193,10 @@ class Binaries:
                     dt = 0.1
                 
                 for i in range(self.Nbin):
-                    line = f'{M1[i]:10.3f} {M2[i]:10.3f}' \
+                    line = f'{m1[i]:10.3f} {m2[i]:10.3f}' \
                            f'{z1:>10} {z2:>10}' \
                            f'{o1:>10} {o2:>10}' \
-                           f'{A[i]:10.3f} {E[i]:10.3f}' \
+                           f'{a[i]:10.3f} {ecc[i]:10.3f}' \
                            f'{tend:>10} {tstart1:>10}' \
                            f'{dt:10.3f} {sn1:>10}' \
                            f'{sn2:>10} {dtout:>10}'
@@ -210,12 +209,12 @@ class Binaries:
                     tstart2 = tstart1
 
                 for i in range(self.Nbin):
-                    line = f'{M1[i]:10.3f} {z1:>10}' \
+                    line = f'{m1[i]:10.3f} {z1:>10}' \
                            f'{o1:>10} {sn1:>10}' \
-                           f'{tstart1:>10} {M2[i]:10.3f}' \
+                           f'{tstart1:>10} {m2[i]:10.3f}' \
                            f'{z2:>10} {o2:>10}' \
                            f'{sn2:>10} {tstart2:>10}' \
-                           f'{A[i]:12.3g} {E[i]:12.3g}' \
+                           f'{a[i]:12.3g} {ecc[i]:12.3g}' \
                            f'{tend:>10} {dtout:>10}'
 
                     print(line, file=f)
