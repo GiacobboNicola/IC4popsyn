@@ -37,6 +37,9 @@ class Binaries:
             print('Building a population of binaries based on Sana+2012 and Kroupa2001')
             if self.model == 'sana_eccm&ds':
                 print('Building a population of binaries based on Sana+2012, Kroupa2001 and Moe&DiStefano 2017')
+                if self.logP_min < np.log10(2):
+                    print('WARNING: minimum period must be longer than 2 days!')
+                    self.logP_min = np.log10(2)
             self.Sana_etal12(self)
         elif self.model == 'M&DS17':
             print('Be patient, we will implement this model soon')
@@ -88,6 +91,7 @@ class Binaries:
         self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
         pbar.update((4/6)*100)
         if self.model == 'sana_eccm&ds':
+            assert len(self.population[self.population['p'] > 2]) == self.Nbin
             Pecc = np.where(self.population['p'] < 2., 2.1, self.population['p'])
             eccMax = tools.eccvsP(Pecc)
             self.population['ecc'] = tools.vec_power_law(self.e_min, eccMax, self.e_slope)
