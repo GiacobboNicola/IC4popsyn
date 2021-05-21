@@ -22,6 +22,8 @@ However, there are many options that allow the user to build it own model. Here 
 
 You can change each paramenter passing it to function as input `parameter=value` (see `example.py`).
 
+***NOTE:** Adopting `sana_eccm&ds` model, periods are forced to be longer than 2 days (see the [image](img/eccM&DS.png) below).*
+
 ## Example
 The `example.py` script is a simple example of how to use this module. It produces two MOBSE-like input files with the initial conditions based on the two avaible models (I'm working to implement new models 👨‍💻).
 
