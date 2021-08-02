@@ -50,7 +50,7 @@ class Binaries:
     def setup_params(cls, self, kwards):
         params = {
             'alphas':[-1.3,-2.3],
-            'mass_range':[0.1,0.5,150],
+            'mass_ranges':[0.1,0.5,150],
             'logP_min': 0.15,
             'logP_max': 5.5,
             'logP_slope': -0.55,
@@ -76,7 +76,7 @@ class Binaries:
         """
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
-        self.population['m1'] = tools.IMF(self.Nbin, self.mass_range, self.alphas)
+        self.population['m1'] = tools.IMF(self.Nbin, self.mass_ranges, self.alphas)
         
         if self.single_pop: #if True returns only population['m1']
             pbar.finish()
@@ -278,3 +278,25 @@ class Binaries:
             np.c_[m1, m2], 
             fmt=('%4.4f %4.4f'),
             delimiter=' ', comments='')
+
+    @classmethod
+    def total_mass_population(cls, self):
+        """
+        It computes the total mass of a population considering the total population follows
+        a Kroupa2001 IMF. The binary and multiplicity fraction is taken from Moe&DiStefano2017.
+        """
+        k2 = 100./((0.5**-0.3 - 0.1**-0.3)/0.5/(-0.3) + (150.**-1.3 - 0.5**-1.3)/(-1.3))
+        k1 = k2 / 0.5
+        ranges = ['0.1-0.5','0.5-0.8','0.8-2','2-5','5-10','10-20','20-150']
+        bins = k1*(0.5**-0.3 - 0.1**-0.3)/(-0.3), \
+                k2*(0.8**-1.3 - 0.5**-1.3)/(-1.3), \
+                k2*(2.**-1.3 - 0.8**-1.3)/(-1.3), \
+                k2*(5.**-1.3 - 2.**-1.3)/(-1.3), \
+                k2*(10.**-1.3 - 5.**-1.3)/(-1.3), \
+                k2*(20.**-1.3 - 10.**-1.3)/(-1.3), \
+                k2*(150.**-1.3 - 20.**-1.3)/(-1.3)
+        # fraction = nCM / (nCM + stars)
+        multiplesFractions = [0.0, 0.0, 0.0, 0.0, 0.76, 0.84, 0.94]
+        binariesFractions = [0.0, 0.0, 0.0, 0.0, 0.36, 0.32, 0.21]
+
+        

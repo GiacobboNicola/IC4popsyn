@@ -1,0 +1,30 @@
+Fraction of mass from different ranges:
+	between 0.1-0.8 Msun there is 	41.2475% of mass
+	between 0.8-2 Msun 	 there is 	20.4425% of mass
+	between 2-5 Msun 	 there is 	15.5293% of mass
+	between 5-9 Msun 	 there is 	7.9351% of mass
+	between 9-16 Msun 	 there is 	6.5235% of mass
+	between 40-16 Msun 	 there is 	8.322% of mass
+
+Fraction of stars in different mass rnage:
+	between 0.1-0.8 Msun there is 	85.37% of stars
+	between 0.8-2 Msun 	 there is 	10.25% of stars
+	between 2-5 Msun 	 there is 	3.11% of stars
+	between 5-9 Msun 	 there is 	0.73% of stars
+	between 9-16 Msun 	 there is 	0.33% of stars
+	between 40-16 Msun 	 there is 	0.21% of stars
+
+--------> tot stars=38363563.6188749
+the percent 0.21 should be 0.21
+the percent 0.23 should be 0.33
+the percent 0.52 should be 0.73
+
+--------> tot stars=26863879.978198357
+the percent 0.3 should be 0.21
+the percent 0.33 should be 0.33
+the percent 0.74 should be 0.73
+
+--------> tot stars=27474171.339250427
+the percent 0.29 should be 0.21
+the percent 0.33 should be 0.33
+the percent 0.73 should be 0.73

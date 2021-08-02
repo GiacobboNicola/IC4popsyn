@@ -81,12 +81,12 @@ def p2a(p, m1, m2):
     a = AURsun*(p*p*(m1 + m2))**(1./3.)
     return a 
     
-def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
+def IMF(number_of_stars, mass_ranges=[0.1,0.5,150], alphas=[-1.3,-2.3]):
     """
     It samples stellar masses from a broken-power-law.
     Input:  
         Number of stars
-        mass_bouders=[0.1,0.5,150]
+        mass_ranges=[0.1,0.5,150]
         alphas=[-1.3,-2.3]
     Default: 
         f(m) = m^alpha (Kroupa01)
@@ -95,7 +95,7 @@ def IMF(number_of_stars, mass_bouders=[0.1,0.5,150], alphas=[-1.3,-2.3]):
     """
     random = np.random.random
 
-    breaks = np.array(mass_bouders)
+    breaks = np.array(mass_ranges)
     slopes = np.array(alphas)
 
     bins = len(slopes)
@@ -153,6 +153,42 @@ def power_law(N, low, up, eta):
 def vec_power_law(low, up, eta):
     _vec_power_law = np.vectorize(power_law)
     return _vec_power_law(1,low,up,eta)
+
+def broken_power_law(N, low, break_point, up, slope_low, slope_up):
+	# first compute normalisation for each segment
+	# n = slope - 1, slope = n + 1
+	C1 = slope_low / (up**slope_low - break_point**slope_low)
+	C2 = slope_up / (break_point**slope_up - low**slope_up)
+	#C1 = 1. / C1
+	#C2 = 1. / C2
+	norm = C1 / (C1 + C2)
+	#print(C1, C2, norm)
+
+	#n1 = (1-(1+break_point)**slope_low)
+	#n2 = (1-(1+break_point)**slope_up)
+	print('cdf:', C1, C2)
+
+	### PDF at break for both power-laws after truncation
+	### power-law 1 is truncated at right
+	#p1 = (slope_low/(1+break_point)**slope_low) / C1
+	### ... while power-law 2 is truncated at left
+	#p2 = (slope_up/(1+break_point)**slope_up) / (1 - C2)
+	p1 = C1 * break_point**(slope_low-1)
+	p2 = C2 * break_point**(slope_up-1)
+
+	norm = p1 / (p1 + p2)
+	print('pdf:', p1, p2, norm)
+	norm = 1. / (1 + 18)
+	# renormalise to 1 across all
+	mask = np.random.uniform(size=N) > norm
+	
+	# draw random numbers proportionally
+	slope = np.where(mask, slope_low, slope_up)
+	low = np.where(mask, low, break_point)
+	up = np.where(mask, break_point, up)
+	y = np.random.uniform(size=N)
+	x = ((up**slope - low**slope)*y + low**slope)**(1./slope)
+	return x
 
 def eccvsP(P):
     """
