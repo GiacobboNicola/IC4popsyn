@@ -20,6 +20,6 @@ setup(
         "License :: MIT License",
     ],
     packages=['ic4popsyn',],
-    install_requires=['numpy','pandas','progressbar'],
+    install_requires=['numpy','pandas','progressbar','pytest','scipy'],
     python_requires=">=3.7"
 )
