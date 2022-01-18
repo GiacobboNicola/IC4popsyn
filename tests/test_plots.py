@@ -7,7 +7,7 @@ from scipy import integrate
 
 def Sana_plots(Nbin):
     # create population of binaries
-    binaries = pop.Binaries(Nbin, model='sana12',mass_range=[5.,150],alphas=[-2.3])
+    binaries = pop.Binaries(Nbin, model='sana12',mass_ranges=[5.,150],alphas=[-2.3])
     binaries.population['logP'] = np.log10(binaries.population['p'])
     binaries.population['q'] = binaries.population['m2']/binaries.population['m1']
 

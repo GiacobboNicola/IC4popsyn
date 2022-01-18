@@ -14,7 +14,7 @@ from ic4popsyn import populations as pop
 
 def Sana_population(N):
     # create population of binaries
-    binaries = pop.Binaries(N, model='SaNa12',mass_range=[5.,150],alphas=[-2.3])
+    binaries = pop.Binaries(N, model='SaNa12',mass_ranges=[5.,150],alphas=[-2.3])
     binaries.population['logP'] = np.log10(binaries.population['p'])
     binaries.population['q'] = binaries.population['m2']/binaries.population['m1']
 
@@ -23,7 +23,7 @@ def Sana_population(N):
     binss = [np.logspace(np.log10(5.),np.log10(150),100),100,100,100]
 
     chis = []
-
+    
     # theoretical function
     powerlaw = lambda x, alpha, b : b*x**(alpha)
 
