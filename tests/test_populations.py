@@ -7,7 +7,7 @@ f(ecc) ~ ecc^{-0.45}
 """
 import numpy as np
 from scipy import integrate
-from scipy.stats import chisquare
+from scipy.stats import chisquare,chi2_contingency
 from scipy.optimize import curve_fit
 from ic4popsyn import tools
 from ic4popsyn import populations as pop
@@ -22,7 +22,7 @@ def Sana_population(N):
     alphas = [-2.3,-0.1,-0.55,-0.45]
     binss = [np.logspace(np.log10(5.),np.log10(150),100),100,100,100]
 
-    chis = []
+    chi2s = []
     
     # theoretical function
     powerlaw = lambda x, alpha, b : b*x**(alpha)
@@ -38,9 +38,10 @@ def Sana_population(N):
         k = integrate.quad(powerlaw, centers[0], centers[-1], args=(a,1))
         y = powerlaw(centers,a,1/k[0])
 
-        chi, _ = chisquare(hist, y)
-        chis.append(chi)
-    return chis
+        chi2 = sum([ ((x-m)*(x-m) / m) for x,m in zip(hist,y)])
+        #chi, _ = chisquare([hist, y])
+        chi2s.append(chi2)
+    return chi2s
 
 def test_answer():
     assert Sana_population(10000) < [0.1, 0.1, 0.1, 0.1]
