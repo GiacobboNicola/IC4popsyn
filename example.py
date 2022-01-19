@@ -4,8 +4,8 @@ from ic4popsyn import tools
 # Number of systems (10 systems are for backup)
 Nbin = 100010  
 # create a population of binaries 
-binSana = pop.Binaries(Nbin, model='sana12', mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
-binSanaMDS = pop.Binaries(Nbin, model='sana_eccM&DS', mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
+binSana = pop.Binaries(Nbin, model='sana12', mass_ranges=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
+binSanaMDS = pop.Binaries(Nbin, model='sana_eccM&DS', mass_ranges=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
 SinglePop = pop.Binaries(Nbin, model='sana_eccM&DS', single_pop=True, mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
 
 # save the population as input for MOBSE 
