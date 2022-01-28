@@ -3,5 +3,4 @@ theme: jekyll-theme-slate
 plugins:
 - jekyll-remote-theme
 gem "github-pages", group: :jekyll_plugins
-logo: /img/logo_mobse.png
 show_downloads: true
