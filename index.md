@@ -1,4 +1,4 @@
-# Initial Condition for POPulation SYNthesis codes
+# Welcome
 
 We know that prepararing the initial conditions (IC) for population-synthesis simulations can be annoyning or even difficult, and here **IC4popsyn** comes to help (or at least, that's what we hope). \
 IC4popsyn is a python module developed for generating the IC for stellar population-synthesis studies. In paricular, IC4popsyn includes some of the most used state-of-the-art models (e.g [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)) and implements the possibility to generate the IC in the format used by our population synthesis codes (i.e. [**MOBSE**](https://mobse-webpage.netlify.app/about/) and **SEVN**). 
