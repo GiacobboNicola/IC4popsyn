@@ -1,4 +1,4 @@
-remote_theme: pages-themes/minimal@v0.2.0
+remote_theme:  jekyll-theme-slate
 theme: jekyll-theme-slate
 plugins:
 - jekyll-remote-theme
