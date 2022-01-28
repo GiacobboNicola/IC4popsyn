@@ -1,5 +1,5 @@
 remote_theme: pages-themes/minimal@v0.2.0
-theme: jekyll-theme-minimal
+theme: Dinky theme
 plugins:
 - jekyll-remote-theme
 gem "github-pages", group: :jekyll_plugins
