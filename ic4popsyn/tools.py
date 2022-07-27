@@ -84,6 +84,7 @@ def p2a(p, m1, m2):
     p = p/yeardy #P from days to yrs
     num = p*p*G*(m1+m2)
     den = 4*np.pi*np.pi
+
     a = (num/den)**(1./3.)
     return a 
     

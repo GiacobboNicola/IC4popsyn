@@ -90,7 +90,7 @@ class Binaries:
             q_min = self.q_min
         q = tools.power_law(self.Nbin, q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
-        secondary = self.population['m1'] * q
+        self.population['m2'] = self.population['m1'] * q
         #The following has been replaced by the check on q_min, in this way we modify q_min but we don't create an accumulation of secondary stars with mass=min_mass        
         #self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/6)*100)
