@@ -83,10 +83,16 @@ class Binaries:
             return
 
         pbar.update((1/6)*100)
-        q = tools.power_law(self.Nbin, self.q_min, self.q_max, self.q_slope)
+        if self.mass_min is not None:
+            q_min = self.mass_min/self.population['m1']
+            q_min = np.where(q_min>self.q_min,q_min,self.q_min)
+        else:
+            q_min = self.q_min
+        q = tools.power_law(self.Nbin, q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
         secondary = self.population['m1'] * q
-        self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
+        #The following has been replaced by the check on q_min, in this way we modify q_min but we don't create an accumulation of secondary stars with mass=min_mass        
+        #self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/6)*100)
         self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
         pbar.update((4/6)*100)
@@ -130,7 +136,7 @@ class Binaries:
                 header=str(self.Nbin-backup), delimiter=' ', comments='')
 
     def _save_sevn_input(self, name, z1=None, z2=None, o1=0.0, o2=0.0, tend=None, tstart1=None, \
-                         sn1=None, sn2=None, dtout=None, tstart2=None, dt=None, Sevn_v=2):
+                         sn1=None, sn2=None, dtout=None, tstart2=None, dt=None, Sevn_v=2,rseed=False):
         """
         It saves a population in a file (SEVN format).
         Input: 
@@ -141,10 +147,10 @@ class Binaries:
             dt = time step of the integration [Myr] (not used)
             sn1, sn2 = supernova explosion mechanism of the stars (string: _delayed_ / _rapid_ / _startrack_)
             dtout = time step for printing outputs [Myr] (float)
+            rseed = if True add a columns with a random seed (bool)
         Output:
             ...
         """
-
         #Set placeholder
         placeholder="xxx"
         if z1 is None:
@@ -179,8 +185,10 @@ class Binaries:
 
             # to remove eventual 1 due to formatting round process
             ecc[ecc > 0.999] = 0.999
-        
-        with open(name+"_"+z1+".in", mode='w') as f:
+        if rseed: 
+            rseed_arr=np.random.randint(1,int(1E15),self.Nbin)
+            assert(len(rseed_arr)==len(np.unique(rseed_arr))) #check that all the IDs are unique
+        with open(name+".in", mode='w') as f:
             
             if self.single_pop:
                 for i in range(self.Nbin):
@@ -188,7 +196,8 @@ class Binaries:
                            f'{o1:>10} {sn1:>10}' \
                            f'{tstart1:>10}' \
                            f'{tend:>10} {dtout:>10}'
-
+                    if rseed: 
+                           line += f' {rseed_arr[i]}'
                     print(line, file=f)
             
             elif Sevn_v == 1:
@@ -204,7 +213,8 @@ class Binaries:
                            f'{tend:>10} {tstart1:>10}' \
                            f'{dt:10.3f} {sn1:>10}' \
                            f'{sn2:>10} {dtout:>10}'
-
+                    if rseed: 
+                           line += f' {rseed_arr[i]}'
                     print(line, file=f)
             
             elif Sevn_v == 2:
@@ -220,7 +230,8 @@ class Binaries:
                            f'{sn2:>10} {tstart2:>10}' \
                            f'{a[i]:12.3g} {ecc[i]:12.3g}' \
                            f'{tend:>10} {dtout:>10}'
-
+                    if rseed: 
+                           line += f' {rseed_arr[i]}'
                     print(line, file=f)
 
         # SN1 = np.array(SN1, dtype=str)

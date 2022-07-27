@@ -64,21 +64,27 @@ class GetFromUrl:
 
 def a2p(sep, m1, m2):
     """
-    It computes the period (day) given m1 (Msun), m2 (Msun) and the sep (Rsun).
+    It computes the period (yr and day) given m1 (Msun), m2 (Msun) and the sep (Rsun).
     """
-    yeardy=365.24
-    AURsun=214.95
-    p = ((sep/AURsun)**3./(m1 + m2))**(0.5)
+    G=3.925125598496094e8 #Rsun^3 YR^-2 MSUN^-1 consistent with Astropy V. 5.1
+    yeardy=365.2425
+    num = 4*np.pi*np.pi*sep*sep*sep
+    den = G*(m1+m2)
+
+    p = np.sqrt(num/den)
+
     return p, p*yeardy
 
 def p2a(p, m1, m2):
     """
     It computes the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days).
     """        
-    yeardy=365.24
-    AURsun=214.95
-    p = p/yeardy
-    a = AURsun*(p*p*(m1 + m2))**(1./3.)
+    G=3.925125598496094e8 #Rsun^3 YR^-2 MSUN^-1 consistent with Astropy V. 5.1
+    yeardy=365.2425
+    p = p/yeardy #P from days to yrs
+    num = p*p*G*(m1+m2)
+    den = 4*np.pi*np.pi
+    a = (num/den)**(1./3.)
     return a 
     
 def IMF(number_of_stars, mass_ranges=[0.1,0.5,150], alphas=[-1.3,-2.3]):
