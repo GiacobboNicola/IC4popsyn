@@ -8,6 +8,7 @@ mobse_n*
 
 # vscode setting
 .vscode
+ic.code-workspace
 
 #Pycharm files
 .idea
@@ -52,6 +53,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+.pytest_cache
 htmlcov/
 .tox/
 .nox/

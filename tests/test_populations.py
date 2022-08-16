@@ -7,9 +7,7 @@ f(ecc) ~ ecc^{-0.45}
 """
 import numpy as np
 from scipy import integrate
-from scipy.stats import chisquare,chi2_contingency
 from scipy.optimize import curve_fit
-from ic4popsyn import tools
 from ic4popsyn import populations as pop
 
 def Sana_population(N):

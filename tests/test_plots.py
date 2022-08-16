@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from ic4popsyn import populations as pop
 from ic4popsyn import tools
