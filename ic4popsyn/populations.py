@@ -1,9 +1,7 @@
 """
 Classes to build populations of stars (singles/bineries/triples)
 """
-import argparse as arg
 import numpy as np
-from numpy.lib.shape_base import hsplit
 import pandas as pd
 import progressbar as pb
 # this package and necessary for Binaries

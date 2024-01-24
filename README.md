@@ -3,7 +3,7 @@
 [![version](https://img.shields.io/badge/version-v--0.1-purple)]()
 [![site](https://img.shields.io/badge/site-active-green)](https://giacobbonicola.github.io/IC4popsyn/)
 
-IC4popsyn is a python module developed for generating the IC for stellar population-synthesis studies. In paricular, IC4popsyn includes some of the most used state-of-the-art models (e.g [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)) and implements the possibility to generate the IC in the format used by our population synthesis codes (i.e. [**MOBSE**](https://mobse-webpage.netlify.app/about/) and **SEVN**). 
+IC4popsyn is a python module developed for generating the IC for stellar population-synthesis studies. In paricular, IC4popsyn includes some of the most used state-of-the-art models (e.g [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)) and implements the possibility to generate the IC in the format used by our population synthesis codes (i.e. [**MOBSE**](https://mobse-webpage.netlify.app/about/) and [**SEVN**](https://gitlab.com/sevncodes/sevn)). 
 
 
 ## Technical details

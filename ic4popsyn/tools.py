@@ -3,7 +3,8 @@ import numpy as np
 import subprocess
 import os 
 import tarfile
-
+# phisical constants
+from ic4popsyn import constants as c
 class GetFromUrl:
     
     def __init__(self, name="mobse"):
@@ -66,23 +67,20 @@ def a2p(sep, m1, m2):
     """
     It computes the period (yr and day) given m1 (Msun), m2 (Msun) and the sep (Rsun).
     """
-    G=3.925125598496094e8 #Rsun^3 YR^-2 MSUN^-1 consistent with Astropy V. 5.1
-    yeardy=365.2425
     num = 4*np.pi*np.pi*sep*sep*sep
-    den = G*(m1+m2)
+    den = c.G*(m1+m2)
 
     p = np.sqrt(num/den)
 
-    return p, p*yeardy
+    return p, p*c.yeardy
+
 
 def p2a(p, m1, m2):
     """
     It computes the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days).
-    """        
-    G=3.925125598496094e8 #Rsun^3 YR^-2 MSUN^-1 consistent with Astropy V. 5.1
-    yeardy=365.2425
-    p = p/yeardy #P from days to yrs
-    num = p*p*G*(m1+m2)
+    """
+    p = p/c.yeardy #P from days to yrs
+    num = p*p*c.G*(m1+m2)
     den = 4*np.pi*np.pi
 
     a = (num/den)**(1./3.)
