@@ -74,6 +74,7 @@ def a2p(sep, m1, m2):
 
     return p, p*c.yeardy
 
+
 def p2a(p, m1, m2):
     """
     It computes the separation (Rsun) given m1 (Msun), m2 (Msun) and p (days).
