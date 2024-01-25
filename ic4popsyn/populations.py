@@ -58,10 +58,15 @@ class Binaries:
             'q_min': 0.1,
             'q_max': 1.0,
             'q_slope': -0.1,
-            'mass_min': 0.1
+            'mass_min': 0.1,
+            "mass_min_policy":"qmin"
         }
 
         for key in params.keys():
+            if key=="mass_min_policy":
+                allowed_options=("qmin","mmin")
+                if params[key] not in allowed_options: 
+                    raise InputError(f"mass_min_policy {params[key]} not implemented")
             if key in kwards:
                 setattr(self, key, kwards[key])
             else:
@@ -81,7 +86,9 @@ class Binaries:
             return
 
         pbar.update((1/6)*100)
-        if self.mass_min is not None:
+        
+        if self.mass_min is not None and self.mass_min_policy=="qmin":
+            # Rescale q_min to draw a value so that mass2>m_min
             q_min = self.mass_min/self.population['m1']
             q_min = np.where(q_min>self.q_min,q_min,self.q_min)
         else:
@@ -89,8 +96,9 @@ class Binaries:
         q = tools.power_law(self.Nbin, q_min, self.q_max, self.q_slope)
         pbar.update((2/6)*100)
         self.population['m2'] = self.population['m1'] * q
-        #The following has been replaced by the check on q_min, in this way we modify q_min but we don't create an accumulation of secondary stars with mass=min_mass        
-        #self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
+        # If policy mmin and m2>mass_min force m2=mass_min
+        if self.mass_min_policy=="mmin":
+            self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
         pbar.update((3/6)*100)
         self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
         pbar.update((4/6)*100)

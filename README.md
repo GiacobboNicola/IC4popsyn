@@ -23,7 +23,10 @@ However, there are many options that allow the user to build it own model. Here 
 * `q_min` = 0.1: lower limit for the mass ratio.   
 * `q_max` = 1.0: upper limit for the mass ratio.  
 * `q_slope` = -0.1: exponent of the power-law.  
-* `mass_min` = 0.1: minimum mass of the secondary.  
+* `mass_min` = 0.1: minimum mass of the secondary.
+* `mass_min_policy` = "qmin" : how to handle secondary mass < mass_min
+   *  qmin': set the q_min to max(q_min,2.2/m1)
+   *  
 
 You can change each paramenter passing it to function as input `parameter=value` (see `example.py` for an application).
 
