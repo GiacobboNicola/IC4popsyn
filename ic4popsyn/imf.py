@@ -3,6 +3,7 @@ Classes for IMF
 """
 import numpy as np
 from abc import ABC, abstractmethod
+from scipy import integrate
 
 class IMF(ABC):
     """
@@ -10,7 +11,9 @@ class IMF(ABC):
     """
 
     def __init__(self,mass_range):
-        self._pdf_norm=None
+        self._mass_range=mass_range
+        self._mmin=min(mass_range)
+        self._mmax=max(mass_range)
 
     def generate(self,number_of_stars):
         """
@@ -31,6 +34,26 @@ class IMF(ABC):
         """
         return self._cdf(mass)
 
+    def mcdf(self,mass,mtot=1):
+        """
+        Return the integral of m times the IMF up to mass in input.
+        Notice it is normalised so that the total mass is equal to mtot
+        Input:
+            mass= number or array of numbers with the mass where to calculate the enclosed mass
+            mtot= normalised total mass
+        """
+        mcdf_max = self._mcdf(self._mmax)
+        norm = mtot/mcdf_max
+
+        return norm*self._mcdf(mass)
+
+    def mpdf(self,mass):
+        """
+        Pdf of the integral m*IMF
+        """
+        norm = self.mcdf(self._mmax)
+        return norm*mass*self.pdf(mass)
+
 
     @abstractmethod
     def _pdf(self,mass):
@@ -39,12 +62,39 @@ class IMF(ABC):
         """
         pass
 
-    @abstractmethod
     def _cdf(self,mass):
         """
-        Specialised Function to estimate cdf
+        Specialised Function to estimate cdf.
+        If the specialised function is not provided, use a numerical integration
         """
-        pass
+        int_function = lambda m:  self.pdf(m)
+
+        if isinstance(mass,int) or isinstance(mass,float):
+            cdf = integrate.quad(int_function,self._mmin,mass)[0]
+        else:
+            cdf = np.zeros_like(mass)
+            for i,m in enumerate(mass):
+                cdf[i] = integrate.quad(int_function,self._mmin,m)[0]
+
+        return cdf
+
+
+    def _mcdf(self,mass):
+        """
+        Specialised Function to estimate m times the IMF up to mass in input
+        If the specialised function is not provided, use a numerical integration
+        """
+        int_function = lambda  m: m*self.pdf(m)
+
+        if isinstance(mass, int) or isinstance(mass, float):
+            mcdf = integrate.quad(int_function, self._mmin, mass)[0]
+        else:
+            mcdf = np.zeros_like(mass)
+            for i, m in enumerate(mass):
+                mcdf[i] = integrate.quad(int_function, self._mmin, m)[0]
+
+        return mcdf
+
 
     @abstractmethod
     def _generate(self,number_of_stars):
@@ -67,10 +117,8 @@ class PowerLaw(IMF):
             mass_ranges= tuples containing the minimum and maximum mass
             alpha= power-law slope
         """
-        self._mass_range=mass_range
         self._alpha=alpha
-        self._mmin=min(mass_range)
-        self._mmax=max(mass_range)
+        super(PowerLaw, self).__init__(mass_range=mass_range) #Initialise mass_range
 
 
     def _generate(self,number_of_stars):
@@ -102,7 +150,7 @@ class PowerLaw(IMF):
             norm = slope/(self._mmax**slope - self._mmin**slope)
             return norm*mass**self._alpha
 
-    def _cdf(self,mass):
+    def _xcdf(self,mass):
         """
         Specialised Function to estimate cdf
         """
