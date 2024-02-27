@@ -11,6 +11,10 @@ class IMF(ABC):
     """
 
     def __init__(self,mass_range):
+
+        if len(mass_range)!=2:
+            raise ValueError(f"mass ranges in Salpeter IMF must contains exactly two values (lowest and highest mass)")
+
         self._mass_range=mass_range
         self._mmin=min(mass_range)
         self._mmax=max(mass_range)
@@ -26,13 +30,31 @@ class IMF(ABC):
         """
         Return the IMF pdf at mass
         """
-        return self._pdf(mass)
+
+        if isinstance(mass,float) or isinstance(mass,int):
+            if mass<self._mmin or mass>self._mmax: return 0
+            else: return self._pdf(mass)
+        else:
+            pdf_array=np.where( (mass>=self._mmin) & (mass<=self._mmax), self._pdf(mass), 0)
+            return pdf_array
+
 
     def cdf(self,mass):
         """
         Return the IMF cdf for M<mass
         """
-        return self._cdf(mass)
+
+        if isinstance(mass,float) or isinstance(mass,int):
+            if mass<self._mmin: return 0
+            elif  mass>self._mmax: return 1
+            else: return self._cdf(mass)
+        else:
+            cdf_array=np.zeros_like(mass)
+            cdf_array[mass>self._mmax]=1
+            idx=(mass>=self._mmin) & (mass<=self._mmax)
+            cdf_array[idx] = self._cdf(mass[idx])
+            return cdf_array
+
 
     def mcdf(self,mass,mtot=1):
         """
@@ -162,6 +184,13 @@ class PowerLaw(IMF):
             norm = 1/(self._mmax**slope - self._mmin**slope)
             return norm*(mass**slope - self._mmin**slope)
 
+class Salpeter(PowerLaw):
+    """
+    Salpeter IMF dN/dM propto M^-2.35
+    """
+    def __init__(self,mass_range=(0.08,150)):
+
+        super().__init__(mass_range=mass_range, alpha=-2.35)
 
 
 class BrokenPowerLaw(IMF):
