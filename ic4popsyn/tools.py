@@ -142,6 +142,8 @@ def IMF(number_of_stars, mass_ranges=[0.1,0.5,150], alphas=[-1.3,-2.3]):
 
     return breaks[:-1][indices] * result
 
+
+
 def power_law(N, low, up, eta):
     """
     It samples elements from a power-law distribution.

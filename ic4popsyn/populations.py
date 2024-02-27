@@ -44,6 +44,7 @@ class Binaries:
         else:
             print('No model selected (binaries is empty)! Build your own model.')
 
+
     @classmethod
     def setup_params(cls, self, kwards):
         params = {
