@@ -8,6 +8,10 @@ class IMF(ABC):
     """
     Base template class
     """
+
+    def __init__(self,mass_range):
+        self._pdf_norm=None
+
     def generate(self,number_of_stars):
         """
         Function to generate stars from the IMF
@@ -15,12 +19,100 @@ class IMF(ABC):
         number_of_stars=int(number_of_stars)
         return self._generate(number_of_stars)
 
+    def pdf(self,mass):
+        """
+        Return the IMF pdf at mass
+        """
+        return self._pdf(mass)
+
+    def cdf(self,mass):
+        """
+        Return the IMF cdf for M<mass
+        """
+        return self._cdf(mass)
+
+
+    @abstractmethod
+    def _pdf(self,mass):
+        """
+        Specialised Function to estimate pdf
+        """
+        pass
+
+    @abstractmethod
+    def _cdf(self,mass):
+        """
+        Specialised Function to estimate cdf
+        """
+        pass
+
     @abstractmethod
     def _generate(self,number_of_stars):
         """
         Specialised Function to generate stars from the IMF
         """
         pass
+
+class PowerLaw(IMF):
+    """
+    It samples stellar masses from a power-law M^alpha
+    Input:
+        mass_ranges= tuples containing the minimum and maximum mass
+        alpha= power-law slope
+    """
+    def __init__(self,mass_range,  alpha):
+        """
+        It samples stellar masses from a power-law M^alpha
+        Input:
+            mass_ranges= tuples containing the minimum and maximum mass
+            alpha= power-law slope
+        """
+        self._mass_range=mass_range
+        self._alpha=alpha
+        self._mmin=min(mass_range)
+        self._mmax=max(mass_range)
+
+
+    def _generate(self,number_of_stars):
+        """
+        Specialised Function to generate stars from the IMF
+        """
+        #Inverse sampling
+        u=np.random.uniform(0,1,number_of_stars)
+        if self._alpha==-1:
+            mmin_log=np.log(self._mmin)
+            masses = np.exp( (np.log(self._mmax) - mmin_log)*u + mmin_log )
+        else:
+            slope = 1+self._alpha
+            mmin_slope = self._mmin**slope
+            masses = ( (self._mmax**slope - mmin_slope)*u + mmin_slope )**(1/slope)
+
+        return masses
+
+    def _pdf(self,mass):
+        """
+        Specialised Function to estimate pdf
+        """
+
+        if self._alpha==-1:
+            norm=1/(np.log(self._mmax)-np.log(self._mmin))
+            return norm/mass
+        else:
+            slope = 1+self._alpha
+            norm = slope/(self._mmax**slope - self._mmin**slope)
+            return norm*mass**self._alpha
+
+    def _cdf(self,mass):
+        """
+        Specialised Function to estimate cdf
+        """
+        if self._alpha==-1:
+            norm = 1 / (np.log(self._mmax) - np.log(self._mmin))
+            return norm*(np.log(mass)-np.log(self._mmin))
+        else:
+            slope=1+self._alpha
+            norm = 1/(self._mmax**slope - self._mmin**slope)
+            return norm*(mass**slope - self._mmin**slope)
 
 
 
@@ -31,15 +123,18 @@ class BrokenPowerLaw(IMF):
         mass_ranges= tuple with N+1 edges of the broken power law pieces
         alphas= tuple with N values of power low index in each of the N pieces
     """
-    def __init__(self,mass_ranges, alphas):
+    def __init__(self,mass_ranges, breakpoints, alphas):
         """
         It samples stellar masses from a broken-power-law with N pieces.
         Input:
-            mass_ranges= tuple with N+1 edges of the broken power law pieces
+            mass_ranges= tuples containing the minimum and maximum mass
+            breakpoints= points at which the power law change
             alphas= tuple with N values of power low index in each of the N pieces
         """
         self.mass_ranges=mass_ranges
         self.alphas=alphas
+
+
 
     def _generate(self,number_of_stars):
         """
@@ -89,6 +184,26 @@ class BrokenPowerLaw(IMF):
         result[normal] = pow(1.0 + kfacs[indices[normal]] * scaled[normal], inv_slopes_plus1[indices[normal]])
 
         return breaks[:-1][indices] * result
+
+    def _continuity_constants(self,):
+        """
+        Given a broken power law pdf of the kind
+        K0 x^-a0  for x<=b_0
+        K1 x^-a1  for b_0<=x<=b_1
+
+        Kn x^-an for x>=b_n-1
+        with breaks points b_0..b_n-1 and slopes a0...an
+        this generator returns the constant Kn to satisfy the continuity at the breakpoints.
+        The last K is always set to 1, therefore the pdf will not integrate to 1!
+        To be sure that the pdf integrates to 1 estimate the integral I and rescale of all the keys
+        by I, i.e. Kn=Kn/I.
+        """
+        current_K=1
+        iter = 0
+        while (iter<len(slopes)):
+            yield current_K
+            if iter<len(breakpoints): current_K = current_K*(breakpoints[iter])**(slopes[iter+1]-slopes[iter])
+            iter+=1
 
 
 class Salpeter(BrokenPowerLaw):
