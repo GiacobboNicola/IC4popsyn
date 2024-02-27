@@ -2,10 +2,9 @@
 Classes for IMF
 """
 import numpy as np
-from abc import ABC, abstractmethod
 from scipy import integrate
 
-class IMF(ABC):
+class IMF():
     """
     Base template class
     """
@@ -77,12 +76,11 @@ class IMF(ABC):
         return norm*mass*self.pdf(mass)
 
 
-    @abstractmethod
     def _pdf(self,mass):
         """
         Specialised Function to estimate pdf
         """
-        pass
+        raise NotImplementedError("Specialised method _pdf not implemented")
 
     def _cdf(self,mass):
         """
@@ -118,12 +116,11 @@ class IMF(ABC):
         return mcdf
 
 
-    @abstractmethod
     def _generate(self,number_of_stars):
         """
         Specialised Function to generate stars from the IMF
         """
-        pass
+        raise NotImplementedError("Specialised method _generate not implemented")
 
 class PowerLaw(IMF):
     """
@@ -188,9 +185,9 @@ class Salpeter(PowerLaw):
     """
     Salpeter IMF dN/dM propto M^-2.35
     """
-    def __init__(self,mass_range=(0.08,150)):
+    def __init__(self, mass_range=(0.08,150)):
 
-        super().__init__(mass_range=mass_range, alpha=-2.35)
+        super(Salpeter, self).__init__(mass_range=mass_range, alpha=-2.35)
 
 
 class BrokenPowerLaw(IMF):
@@ -282,17 +279,6 @@ class BrokenPowerLaw(IMF):
             if iter<len(breakpoints): current_K = current_K*(breakpoints[iter])**(slopes[iter+1]-slopes[iter])
             iter+=1
 
-
-class Salpeter(BrokenPowerLaw):
-    """
-    Salpeter IMF dN/dM propto M^-2.35
-    """
-    def __init__(self,mass_ranges=(0.08,150)):
-
-        if len(mass_ranges)!=2:
-            raise ValueError(f"mass ranges in Salpeter IMF must contains exactly two values (lowest and highest mass)")
-
-        super().__init__(mass_ranges=mass_ranges, alphas=(-2.35,))
 
 class Kroupa(BrokenPowerLaw):
     """
