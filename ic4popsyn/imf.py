@@ -5,6 +5,7 @@ import numpy as np
 from scipy import integrate
 from scipy import special
 from scipy import stats
+from scipy.interpolate import UnivariateSpline as us
 
 class IMF():
     """
@@ -31,12 +32,40 @@ class IMF():
     def mmax(self):
         return self._mmax
 
-    def generate(self,number_of_stars):
+    def generate(self,number_of_stars,mass_range=None):
         """
         Function to generate stars from the IMF
         """
-        number_of_stars=int(number_of_stars)
-        return self._generate(number_of_stars)
+        number_of_stars = int(number_of_stars)
+
+        if mass_range is None:
+            # No new mass range return the speecialised generate function
+            return self._generate(number_of_stars)
+        else:
+            # Check if there is a new mass_range in input
+            if len(mass_range)!=2: raise ValueError("mass_range in input must be None or a 2-element container")
+
+            if min(mass_range)<self.mmin or max(mass_range)>self.mmax:
+                raise ValueError(f"new mass range in input {mass_range} is not within the mass_range of the IMF ({self.mmin,self.mmax})")
+
+            # To account for the new mass range, we use an approximate but robut method
+            # 0-create a CDF array within the new mass limit using univariate spline
+            mmin=min(mass_range)
+            mmax=max(mass_range)
+            cdfmmin=self.cdf(mmin)
+            cdfmmax = self.cdf(mmax)
+            mmbins=np.logspace(np.log10(mmin),np.log10(mmax),1024)
+            # 1- Build now the interpolated function cdf between the limit, normalised to go from 0 to 1
+            # so we will have number from 0 to 1 in the x axis, and relative masses in the y axis
+            fcdf_inverse = us((self.cdf(mmbins)-cdfmmin)/(cdfmmax-cdfmmin), mmbins,  s=0, k=2)
+            print("A",fcdf_inverse(0),fcdf_inverse(1),cdfmmin,cdfmmax)
+            print("B",(self.cdf(mmbins)-cdfmmin)/(cdfmmax-cdfmmin),self.cdf(mmbins))
+            print("C",mmbins,mmin,mmax,self.cdf(10),self.cdf(mmbins[0]))
+            print("D",self.cdf(mmbins))
+            # 2- Generate N random number between 0 and 1
+            u = np.random.uniform(0,1,number_of_stars)
+            # 3- Generate masses
+            return fcdf_inverse(u)
 
     def pdf(self,mass):
         """
@@ -223,7 +252,7 @@ class CombinedIMF(IMF):
 
             idx = (mass >= comp.mmin) & (mass <= comp.mmax)
             if np.sum(idx)!=0:
-                ret_array = np.where(idx,ret_array+self._Ks[i]*comp.cdf(mass)+cdf_at_break, ret_array)
+                ret_array = np.where(idx,self._Ks[i]*comp.cdf(mass)+cdf_at_break, ret_array)
             cdf_at_break += self._Ks[i]
 
         if len(ret_array) == 1:
@@ -297,7 +326,7 @@ class PowerLaw(IMF):
             norm = slope/(self._mmax**slope - self._mmin**slope)
             return norm*mass**self._alpha
 
-    def _xcdf(self,mass):
+    def _cdf(self,mass):
         """
         Specialised Function to estimate cdf
         """
