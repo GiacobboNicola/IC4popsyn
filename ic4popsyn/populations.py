@@ -1,12 +1,22 @@
 """
 Classes to build populations of stars (singles/bineries/triples)
+
+28/02/2024, Giuliano Iorio: I am refactoring the whole population generation to make it consistent
+with the new IMF class and increase the flexibility of the model. At the moment the implementation is an hybrid
+so that the method can continue to work with the same input. The only important difference is the fact that now
+the generation of the population needs to be explicitley triggered with the method generate().
+This generation delay is essential to create class method to use different IMF function. This will be changed
+in future when the complete transition to the new implementation is concluded
+
 """
 import numpy as np
 import pandas as pd
 import progressbar as pb
 # this package and necessary for Binaries
 from ic4popsyn import tools
+from ic4popsyn import imf
 
+#@TODO: better to call it population, in future we may want to add also a mix of Binaries and Single
 class Binaries:
     def __init__(self, number_of_binaries, single_pop=False, **kwards):
 
@@ -23,9 +33,20 @@ class Binaries:
             self.model = kwards['model'].lower()
         else:
             self.model = 'None'
-        
+
+        self._IMF_generator = None
+
+        # Default IMF
+        #@TODO  just temporaru to be changed when recfatory is completed
+        self._IMF_generator = lambda Nstar: tools.IMF(Nstar, self.mass_ranges, self.alphas)
+
+
+    def generate(self):
+        """
+        Method to actually generate the population
+        """
         # Build dataframe with minimal info
-        if single_pop:
+        if self.single_pop:
             self.population = pd.DataFrame(columns=['m1'])
         else:
             self.population = pd.DataFrame(columns=['m1','m2','p','ecc','a'])
@@ -78,10 +99,15 @@ class Binaries:
         """
         It draws a population of binaries based on Sana+12.
         """
+
+        #Check if IMF_generator is ready
+        if self._IMF_generator is None:
+            return ValueError("No IMF generator set")
+
         # The beginning of the main function
         pbar = pb.ProgressBar().start()
-        self.population['m1'] = tools.IMF(self.Nbin, self.mass_ranges, self.alphas)
-        
+        self.population['m1'] = self._IMF_generator(self.Nbin)
+
         if self.single_pop: #if True returns only population['m1']
             pbar.finish()
             return
@@ -114,7 +140,44 @@ class Binaries:
         self.population['a'] = tools.p2a(self.population['p'], self.population['m1'], self.population['m2'])        
         pbar.finish()   
         # The end
-    
+
+    @classmethod
+    def Chabrier(cls,number_of_binaries, single_pop=False, **kwards):
+        """
+        Draws a population using a Chabrier IMF for the primary.
+        The Chabrier IMF consists (Eq. 3 from  https://ui.adsabs.harvard.edu/abs/2013MNRAS.436.3031V/abstract) of:
+        1- A lognormal mass pdf up to 1 Msun, with log_mean= 0.079 and std=0.69
+        2- A Singple power-law with slope -2.3 for mass higher than 1 Msun
+
+        The mass_ranges can be used to set the input mass range for the population.
+        The input property alpha is not considered
+        """
+
+        imfobj = imf.Chabrier()
+
+        # Initialise classe
+        newobj=cls(number_of_binaries=number_of_binaries,
+                     single_pop=single_pop,
+                     **kwards)
+
+        # Set the proper IMF generator
+        #Set the minimum
+        if min(newobj.mass_ranges)<imfobj.mmin: mmin=min(newobj.mass_ranges)
+        else: mmin=imfobj.mmin
+        #Set the maximum
+        if max(newobj.mass_ranges)>imfobj.mmax: mmax=max(newobj.mass_ranges)
+        else: mmax=imfobj.mmax
+
+        newobj._IMF_generator = lambda Nstar: imf.Chabrier(mass_range=(mmin,mmax)).generate(Nstar,mass_range=newobj.mass_ranges)
+
+        return newobj
+
+
+
+
+
+
+
     # To use pandas dataframe use to define the object
     def _save_mobse_input(self, name, met, tmax, backup=10):
         """
@@ -318,3 +381,27 @@ class Binaries:
         binariesFractions = [0.0, 0.0, 0.0, 0.0, 0.36, 0.32, 0.21]
 
         
+if __name__=="__main__":
+
+    import matplotlib.pyplot as plt
+
+    pop=Binaries(100,model="sana12",mass_ranges=(5,150),alphas=[-2.35,])
+    print(pop.model)
+    pop.generate()
+    print(pop.population)
+
+    pop=Binaries.Chabrier(1000000,model="sana12",mass_ranges=(0.1,100))
+    print(pop.model)
+    pop.generate()
+    m=pop.population["m1"]
+    mbins = np.logspace(np.log10(min(m)), np.log10(max(m)), 100)
+    plt.hist(m, bins=mbins, density=True, histtype="step")
+
+    p = imf.Chabrier(mass_range=(0.1,100))
+    plt.plot(mbins,p.pdf(mbins))
+
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.show()
+
+    print(pop.population)

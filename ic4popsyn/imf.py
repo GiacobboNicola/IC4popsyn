@@ -467,6 +467,15 @@ class LogGauPowerLaw(CombinedIMF):
         super(LogGauPowerLaw, self).__init__(components=(comp1,comp2))
 
 class Chabrier(LogGauPowerLaw):
+    """
+    Draws a population using a Chabrier IMF for the primary.
+    The Chabrier IMF consists (Eq. 3 from  https://ui.adsabs.harvard.edu/abs/2013MNRAS.436.3031V/abstract) of:
+    1- A lognormal mass pdf up to 1 Msun, with log_mean= 0.079 and std=0.69
+    2- A Singple power-law with slope -2.3 for mass higher than 1 Msun
+
+    The mass_ranges can be used to set the input mass range for the population.
+    The input property alpha is not considered
+    """
 
     def __init__(self,mass_range=(0.1,100)):
 
