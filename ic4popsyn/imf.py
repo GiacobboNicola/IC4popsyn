@@ -315,7 +315,7 @@ class PowerLaw(IMF):
 
     def _pdf(self,mass):
         """
-        Specialised Function to estimate pdf
+        Specialised Function to estimate pdfs
         """
 
         if self._alpha==-1:
