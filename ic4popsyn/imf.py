@@ -58,10 +58,6 @@ class IMF():
             # 1- Build now the interpolated function cdf between the limit, normalised to go from 0 to 1
             # so we will have number from 0 to 1 in the x axis, and relative masses in the y axis
             fcdf_inverse = us((self.cdf(mmbins)-cdfmmin)/(cdfmmax-cdfmmin), mmbins,  s=0, k=2)
-            print("A",fcdf_inverse(0),fcdf_inverse(1),cdfmmin,cdfmmax)
-            print("B",(self.cdf(mmbins)-cdfmmin)/(cdfmmax-cdfmmin),self.cdf(mmbins))
-            print("C",mmbins,mmin,mmax,self.cdf(10),self.cdf(mmbins[0]))
-            print("D",self.cdf(mmbins))
             # 2- Generate N random number between 0 and 1
             u = np.random.uniform(0,1,number_of_stars)
             # 3- Generate masses
@@ -76,6 +72,7 @@ class IMF():
             if mass<self._mmin or mass>self._mmax: return 0
             else: return self._pdf(mass)
         else:
+            mass = np.asarray(mass, dtype=float)  # To avoid problem with conversion
             pdf_array=np.where( (mass>=self._mmin) & (mass<=self._mmax), self._pdf(mass), 0)
             return pdf_array
 
@@ -90,6 +87,7 @@ class IMF():
             elif  mass>self._mmax: return 1
             else: return self._cdf(mass)
         else:
+            mass = np.asarray(mass,dtype=float) # To avoid problem with conversion
             cdf_array=np.zeros_like(mass)
             cdf_array[mass>self._mmax]=1
             idx=(mass>=self._mmin) & (mass<=self._mmax)
@@ -105,6 +103,7 @@ class IMF():
             mass= number or array of numbers with the mass where to calculate the enclosed mass
             mtot= normalised total mass
         """
+
         mcdf_max = self._mcdf(self._mmax)
         norm = mtot/mcdf_max
 
@@ -134,6 +133,7 @@ class IMF():
         if isinstance(mass,int) or isinstance(mass,float):
             cdf = integrate.quad(int_function,self._mmin,mass)[0]
         else:
+            mass = np.asarray(mass, dtype=float)  # To avoid problem with conversion
             cdf = np.zeros_like(mass)
             for i,m in enumerate(mass):
                 cdf[i] = integrate.quad(int_function,self._mmin,m)[0]
@@ -151,6 +151,7 @@ class IMF():
         if isinstance(mass, int) or isinstance(mass, float):
             mcdf = integrate.quad(int_function, self._mmin, mass)[0]
         else:
+            mass = np.asarray(mass, dtype=float)  # To avoid problem with conversion
             mcdf = np.zeros_like(mass)
             for i, m in enumerate(mass):
                 mcdf[i] = integrate.quad(int_function, self._mmin, m)[0]
@@ -264,7 +265,6 @@ class CombinedIMF(IMF):
 
         # Cumulative propability
         cdf_at_break = [0,]+list(np.cumsum(self._Ks))
-        print(cdf_at_break)
         u = np.random.uniform(0,1,number_of_stars)
         ret_mass = np.zeros_like(u)
 
@@ -451,22 +451,35 @@ class LogGau(IMF):
         logm=rv.rvs(number_of_stars)
         return 10**logm
 
+class LogGauPowerLaw(CombinedIMF):
 
-class Chabrier(CombinedIMF):
 
-    def __init__(self,mass_range):
-
-        m_break = 1 # Transition from lognormal to powerlaw
+    def __init__(self,mass_range,m_break,m_mean,logm_std,alpha):
 
         if min(mass_range)>=m_break: raise ValueError("You are using a Chabrier with minimum mass larger than the break mass, "
                                                      "this is just a power law consider to use the PowerLaw instead")
         elif max(mass_range)<=m_break: raise ValueError("You are using a Chabrier with maximum mass smaller than the break mass, "
                                                      "this is just a log normal distribution consider to use the LogNorm instead")
 
-        comp1=LogGau(mass_range=(mass_range[0],1),m_mean=0.079,logm_std=0.69)
-        comp2=PowerLaw(mass_range=(1,mass_range[1]),alpha=-2.3)
+        comp1=LogGau(mass_range=(mass_range[0],m_break),m_mean=m_mean,logm_std=logm_std)
+        comp2=PowerLaw(mass_range=(m_break,mass_range[1]),alpha=alpha)
 
-        super(Chabrier, self).__init__(components=(comp1,comp2))
+        super(LogGauPowerLaw, self).__init__(components=(comp1,comp2))
+
+class Chabrier(LogGauPowerLaw):
+
+    def __init__(self,mass_range=(0.1,100)):
+
+        m_break=1
+        m_mean=0.079
+        logm_std = 0.69
+        alpha=-2.3
+
+        super(Chabrier, self).__init__(mass_range=mass_range,
+                                       m_break=m_break,
+                                       m_mean=m_mean,
+                                       logm_std=logm_std,
+                                       alpha=alpha)
 
 
 class _BrokenPowerLaw(IMF):
@@ -609,5 +622,28 @@ class _Kroupa(BrokenPowerLaw):
         super().__init__(mass_ranges=tuple(_mass_ranges), alphas=tuple(_alphas))
 
 
+if __name__=="__main__":
 
+    import matplotlib.pyplot as plt
+
+    p=Chabrier()
+
+    m=p.generate(1e6)
+
+    mbins=np.logspace(np.log10(min(m)),np.log10(max(m)),100)
+    plt.hist(m,bins=mbins,density=True,histtype="step")
+    plt.plot(mbins,p.pdf(mbins))
+    plt.hist(m, bins=mbins, density=True, histtype="step",cumulative=True)
+    plt.plot(mbins, p.cdf(mbins))
+
+    m = p.generate(1e6,mass_range=(0.1,1))
+    mbins = np.logspace(np.log10(min(m)), np.log10(max(m)), 100)
+    plt.hist(m, bins=mbins, density=True, histtype="step")
+
+
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.show()
+    print(p.cdf(10))
+    print(p.cdf([1,11]))
 
