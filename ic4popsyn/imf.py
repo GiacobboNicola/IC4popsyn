@@ -23,6 +23,14 @@ class IMF():
         self._mmax=max(mass_range)
         if self._mmin<=0: raise ValueError("minimum mass cannot be lower or equal 0")
 
+    @property
+    def mmin(self):
+        return self._mmin
+
+    @property
+    def mmax(self):
+        return self._mmax
+
     def generate(self,number_of_stars):
         """
         Function to generate stars from the IMF
@@ -127,6 +135,121 @@ class IMF():
         """
         raise NotImplementedError("Specialised method _generate not implemented")
 
+class CombinedIMF(IMF):
+
+    def __init__(self,components):
+        """
+        Input:
+            mass_range= tuples containing the minimum and maximum mass
+            m_mean = mass of the peak of the lognormal
+            logm_std= std if tge log normal
+        """
+
+        if len(components)<2: raise ValueError("less than 2 components, use a single IMF class instead")
+        # Some sanity check
+        mmin_current=1e30
+        mmax_current=0
+        breakpoints=[]
+        for i, comp in enumerate(components):
+            #Set min max
+            if  i==0: mmin_current=comp.mmin
+            elif i==len(components)-1: mmax_current=comp.mmax
+
+            # check that components are concatenated
+            if i<=(len(components)-2):
+                if comp.mmax != components[i+1].mmin: raise ValueError(f"The mass boundaries of the components {i} and {i+2} do not match")
+                #Add breakpoints
+                breakpoints.append(comp.mmax)
+
+
+        self._breakpoints=breakpoints
+        self._components=components
+        self._Ncomp = len(self._components)
+        self._Ks = np.array(list(self._get_continuity_constants()))
+        #Since all cfd of the single pieces integrate to 1, the relative contribution
+        #is is equal to the component Ks over the sum of all the Ks, so we
+        #normalise the weight to obtain a proper pdf
+        self._Ks = tuple(self._Ks/self._Ks.sum())
+
+        super(CombinedIMF, self).__init__(mass_range=(mmin_current,mmax_current))
+
+    def _get_continuity_constants(self):
+        """
+        First K always 1
+        """
+        current_K = 1
+        iter = 0
+        while (iter <= len(self._breakpoints)):
+            yield current_K
+            if iter < len(self._breakpoints):
+                breakpoint = self._breakpoints[iter]
+                current_K = current_K * self._components[iter].pdf(breakpoint) /self._components[iter+1].pdf(breakpoint)
+            iter += 1
+
+    def _locate_mass(self,mass):
+
+        mass=np.at_least1d(mass)
+
+        loc_array=np.zeros_like(mass)
+        for i,comp in enumerate(self._components):
+            idx = (mass>=comp.mmin) & (mass<=comp.mmax)
+            loc_array[idx] = i
+
+        if len(loc_array)==1: return loc_array[0]
+        else: return  loc_array
+
+    def _pdf(self,mass):
+
+        mass = np.atleast_1d(mass)
+
+        ret_array = np.zeros_like(mass)
+        for i,comp in enumerate(self._components):
+            idx = (mass >= comp.mmin) & (mass <= comp.mmax)
+            if np.sum(idx)!=0:
+                ret_array = np.where(idx,self._Ks[i]*comp.pdf(mass), ret_array)
+
+        if len(ret_array) == 1:
+            return ret_array[0]
+        else:
+            return ret_array
+
+    def _cdf(self,mass):
+
+        mass = np.atleast_1d(mass)
+
+        ret_array = np.zeros_like(mass)
+        cdf_at_break=0
+        for i,comp in enumerate(self._components):
+
+            idx = (mass >= comp.mmin) & (mass <= comp.mmax)
+            if np.sum(idx)!=0:
+                ret_array = np.where(idx,ret_array+self._Ks[i]*comp.cdf(mass)+cdf_at_break, ret_array)
+            cdf_at_break += self._Ks[i]
+
+        if len(ret_array) == 1:
+            return ret_array[0]
+        else:
+            return ret_array
+
+    def _generate(self,number_of_stars):
+
+        # Cumulative propability
+        cdf_at_break = [0,]+list(np.cumsum(self._Ks))
+        print(cdf_at_break)
+        u = np.random.uniform(0,1,number_of_stars)
+        ret_mass = np.zeros_like(u)
+
+        for i in range(self._Ncomp):
+            comp = self._components[i]
+            idx = (u<=cdf_at_break[i+1]) & (u>=cdf_at_break[i]) # use the u to set in which component we have to generate the masses
+            ret_mass[idx] = comp.generate(np.sum(idx))
+
+        return ret_mass
+
+
+
+
+
 class PowerLaw(IMF):
     """
     It samples stellar masses from a power-law M^alpha
@@ -186,7 +309,6 @@ class PowerLaw(IMF):
             norm = 1/(self._mmax**slope - self._mmin**slope)
             return norm*(mass**slope - self._mmin**slope)
 
-
 class BrokenPowerLaw(IMF):
     """
     It samples stellar masses from a broken-power-law with N pieces.
@@ -197,7 +319,6 @@ class BrokenPowerLaw(IMF):
     """
 
     # To be built
-
 
 class Salpeter(PowerLaw):
     """
@@ -286,7 +407,7 @@ class LogGau(IMF):
         or create an interpolation and then invert it.
         But since we are already depending on scipy, we can use the truncated normal distribution
         in scipy stats so that we can exploit vectorisation
-        @TODO: for consistenscy we should use the same scipy utilities also for the pdf and cdf
+        @TODO: for consistency we should use the same scipy utilities also for the pdf and cdf
         """
 
         # In stats the limit need to be given with y=(lm - lm_mean)/(std) (similar to what we use in th cdf)
@@ -302,14 +423,21 @@ class LogGau(IMF):
         return 10**logm
 
 
-class LogGauPowerLaw(IMF):
-    """
-    An IMF in which
-    dN/dM prop to a log m Gaussian m<mbreak
-    dN/dM prop to  m**alpha for m>mbreak
-    """
+class Chabrier(CombinedIMF):
 
+    def __init__(self,mass_range):
 
+        m_break = 1 # Transition from lognormal to powerlaw
+
+        if min(mass_range)>=m_break: raise ValueError("You are using a Chabrier with minimum mass larger than the break mass, "
+                                                     "this is just a power law consider to use the PowerLaw instead")
+        elif max(mass_range)<=m_break: raise ValueError("You are using a Chabrier with maximum mass smaller than the break mass, "
+                                                     "this is just a log normal distribution consider to use the LogNorm instead")
+
+        comp1=LogGau(mass_range=(mass_range[0],1),m_mean=0.079,logm_std=0.69)
+        comp2=PowerLaw(mass_range=(1,mass_range[1]),alpha=-2.3)
+
+        super(Chabrier, self).__init__(components=(comp1,comp2))
 
 
 class _BrokenPowerLaw(IMF):
