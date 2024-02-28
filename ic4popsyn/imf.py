@@ -3,10 +3,14 @@ Classes for IMF
 """
 import numpy as np
 from scipy import integrate
+from scipy import special
+from scipy import stats
 
 class IMF():
     """
     Base template class
+    Input:
+        mass_range= tuples containing the minimum and maximum mass
     """
 
     def __init__(self,mass_range):
@@ -17,6 +21,7 @@ class IMF():
         self._mass_range=mass_range
         self._mmin=min(mass_range)
         self._mmax=max(mass_range)
+        if self._mmin<=0: raise ValueError("minimum mass cannot be lower or equal 0")
 
     def generate(self,number_of_stars):
         """
@@ -126,7 +131,7 @@ class PowerLaw(IMF):
     """
     It samples stellar masses from a power-law M^alpha
     Input:
-        mass_ranges= tuples containing the minimum and maximum mass
+        mass_range= tuples containing the minimum and maximum mass
         alpha= power-law slope
     """
     def __init__(self,mass_range,  alpha):
@@ -181,6 +186,19 @@ class PowerLaw(IMF):
             norm = 1/(self._mmax**slope - self._mmin**slope)
             return norm*(mass**slope - self._mmin**slope)
 
+
+class BrokenPowerLaw(IMF):
+    """
+    It samples stellar masses from a broken-power-law with N pieces.
+    Input:
+        mass_range= tuples containing the minimum and maximum mass
+        break_points= Points
+        alphas= tuple with N values of power low index in each of the N pieces
+    """
+
+    # To be built
+
+
 class Salpeter(PowerLaw):
     """
     Salpeter IMF dN/dM propto M^-2.35
@@ -189,8 +207,112 @@ class Salpeter(PowerLaw):
 
         super(Salpeter, self).__init__(mass_range=mass_range, alpha=-2.35)
 
+class LogGau(IMF):
+    """
+    An IMF in which
+    dN/dM prop to a log normal in m
+    """
 
-class BrokenPowerLaw(IMF):
+    def __init__(self,mass_range,m_mean,logm_std):
+        """
+        Input:
+            mass_range= tuples containing the minimum and maximum mass
+            m_mean = mass of the peak of the lognormal
+            logm_std= std if tge log normal
+        """
+
+        # Since we are depends on scipy
+        # Here we use the stat
+
+        # We assume that the pdf is A*exp-(lm - lm_mean)^2/(2*std^2)
+        # where A is the normalisation constant (to be found)
+        # this is the pdf in the logspace log10(m), in the linear space
+        # we have to add the Jacobian d log10(m) / dm  = 1/(m*ln(10))
+
+        self._m_mean   = m_mean
+        if self._m_mean<=0: raise ValueError("m_mean mass must be strictly positive")
+        self._logm_std = logm_std
+        if self._m_mean<=0: raise ValueError("logm_std  must be strictly positive")
+        super(LogGau, self).__init__(mass_range)
+
+        # We set not the normalisation constant  A
+        # considering our pdf as A * _pdf where
+        # _pdf is exp-(lm - lm_mean)^2/(2*std^2)
+        # and A is found integrating such pdf in the mass range
+        self._pdf_norm = 1/self._cdf_not_norm(self._mmin,self._mmax)
+
+    def _pdf(self,mass):
+        """
+        This is simply a truncated Gaussian in the log10 space
+        """
+        logmean = np.log10(self._m_mean)
+        logmass = np.log10(mass)
+        std = self._logm_std
+        t = (logmass-logmean)/std
+        Jacobian = 1/(mass*np.log(10))
+        # The Jacobian takes into account that the Gaussian is defined in the log10(m) space
+        # but the pdf is in the linear m space (d log10(m) = d m /(m*ln(10))
+
+        return self._pdf_norm*Jacobian*np.exp(-0.5*t*t)
+
+    def _cdf(self,mass):
+        """
+        This is simply a truncated Gaussian in the log10 space
+        see _cdf_not_norm
+        """
+
+        return self._pdf_norm*self._cdf_not_norm(self._mmin,mass)
+
+    def _cdf_not_norm(self,mmin,mmax):
+        """
+        This the method to find the total integral of the pdf given the mass range assuming norm A=1
+        in  A*exp-(lm - lm_mean)^2/(2*std^2). If we introduce the variable t=(lm - lm_mean)/(np.sqrt(2) std)
+        we have pdf(t) = exp(-t^2) with Jacobian d lm / dt = sqrt(2) std,
+        Considering that the error function is defined as Errf(t) = 2/sqrt(pi) * int^z_0 e^-t^2 dt
+        the solution of our integral between tmin=(log(xmin) -lm_mean)/(np.sqrt(2) std) and xmax=(log(xmax) -lm_mean)/(np.sqrt(2) std) is
+        sqrt(pi/2) * std (Errf(tmax)-Errf(tmin)), Errf is taken fro scipy
+        """
+
+        ft = lambda m: (np.log10(m) - np.log10(self._m_mean))/(self._logm_std*np.sqrt(2))
+
+        tmin = ft(mmin)
+        tmax = ft(mmax)
+
+        return np.sqrt(np.pi/2)*self._logm_std*(special.erf(tmax) - special.erf(tmin))
+
+    def _generate(self,number_of_stars):
+        """
+        This is a truncated Gaussian, we can in principle use rejection sampling
+        or create an interpolation and then invert it.
+        But since we are already depending on scipy, we can use the truncated normal distribution
+        in scipy stats so that we can exploit vectorisation
+        @TODO: for consistenscy we should use the same scipy utilities also for the pdf and cdf
+        """
+
+        # In stats the limit need to be given with y=(lm - lm_mean)/(std) (similar to what we use in th cdf)
+
+        logmean = np.log10(self._m_mean)
+        ft = lambda m: (np.log10(m) - logmean)/(self._logm_std)
+
+        tmin = ft(self._mmin)
+        tmax = ft(self._mmax)
+
+        rv = stats.truncnorm(tmin, tmax, loc=logmean, scale=self._logm_std) #@TODO when using scipy everywhere we can initialise this obj in the init
+        logm=rv.rvs(number_of_stars)
+        return 10**logm
+
+
+class LogGauPowerLaw(IMF):
+    """
+    An IMF in which
+    dN/dM prop to a log m Gaussian m<mbreak
+    dN/dM prop to  m**alpha for m>mbreak
+    """
+
+
+
+
+class _BrokenPowerLaw(IMF):
     """
     It samples stellar masses from a broken-power-law with N pieces.
     Input:
@@ -280,7 +402,7 @@ class BrokenPowerLaw(IMF):
             iter+=1
 
 
-class Kroupa(BrokenPowerLaw):
+class _Kroupa(BrokenPowerLaw):
     """
 
     """
