@@ -10,6 +10,7 @@ for z in range(10):
 
     print(z)
     binSana = pop.Binaries(Nbin, model='sana12') # available: sana12 / sana_eccm&ds
+    binSana.generate()
     # save the population as input for MOBSE 
     nHigh = binSana.population[binSana.population['m1'] >= 5]
     highMass = nHigh.m1.sum() #+ nHigh.m2.sum()

@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='ic4popsyn',
-    version='0.3.1',
+    version='1.0.0',
     author='Nicola Giacobbo, Giuliano Iorio, Guglielmo Costa',
-    author_email="giuliano.iorio.astro@gmail.com",
+    author_email=("giuliano.iorio.astro@gmail.com","giacobbo.nicola@gmail.com"),
     description="A package to help build initial conditions for population-synthesis codes.",
     long_description=long_description,
     long_description_content_type="text/markdown",

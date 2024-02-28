@@ -8,7 +8,8 @@ backup = 1
 for z in [0.02, 0.008, 0.002, 0.0008, 0.0002]:
 
     binSana = pop.Binaries(Nbin, model='sana12', mass_range=[5.,150.], alphas=[-2.3]) # available: sana12 / sana_eccm&ds
-    # save the population as input for MOBSE 
+    binSana.generate()
+    # save the population as input for MOBSE
     binSana.save_mobse_input('mobse', z, 13600, backup)
 
     type1 = [1]*Nbin

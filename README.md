@@ -5,9 +5,20 @@
 
 IC4popsyn is a python module developed for generating the IC for stellar population-synthesis studies. In paricular, IC4popsyn includes some of the most used state-of-the-art models (e.g [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)) and implements the possibility to generate the IC in the format used by our population synthesis codes (i.e. [**MOBSE**](https://mobse-webpage.netlify.app/about/) and [**SEVN**](https://gitlab.com/sevncodes/sevn)). 
 
+## IMPORTANT NOTICE
+This is a development version  that is workingin progress and it has not been fully tested yet. 
+Use the main branch if you are looking for the last stable release
+
 
 ## Technical details
-By now we have implemented two models:
+For the IMF model th default parameter is a broken power-law with 
+paramters that can be set at runtime (see below).
+At the moment a Chabrier is also implemented, it can be used
+with the class method Binarier.Chabrier and the same input paramters
+of the standard Binaries call. Notice that in this case the mass_ranges
+vector must contain only two values, and the alphas vector is not considered. 
+
+By now we have implemented two models for the binary parameters:
 1. `sana12`: it's based on [*Sana+12*](https://ui.adsabs.harvard.edu/abs/2012Sci...337..444S/abstract)
 2. `sana_eccm&ds`: it's still based on *Sana+12* but the eccentricity are compute following eq. 3 in [M&DS2017](https://iopscience.iop.org/article/10.3847/1538-4365/aa6fb6/pdf).
 
@@ -29,6 +40,10 @@ However, there are many options that allow the user to build it own model. Here 
    *  mmin: set m2=max(q*m1,mass_min)
 
 You can change each paramenter passing it to function as input `parameter=value` (see `example.py` for an application).
+
+**NOTE**: The intiialisation of the Binaries class will not automatically generate 
+the population. To generate the population call the method generate (no parameters accepetd)
+This is an important change with respect to the sable version
 
 ***NOTE:** Adopting `sana_eccm&ds` model, periods are forced to be longer than 2 days (see the [image](img/eccM&DS.png) below).*
 
