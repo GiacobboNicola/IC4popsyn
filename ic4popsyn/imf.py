@@ -637,6 +637,9 @@ if __name__=="__main__":
 
     p=Chabrier()
 
+    print(p.mcdf(p.mmax))
+    print(p.mcdf)
+    """
     m=p.generate(1e6)
 
     mbins=np.logspace(np.log10(min(m)),np.log10(max(m)),100)
@@ -655,4 +658,4 @@ if __name__=="__main__":
     plt.show()
     print(p.cdf(10))
     print(p.cdf([1,11]))
-
+    """
