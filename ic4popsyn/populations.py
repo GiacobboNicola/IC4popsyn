@@ -1,9 +1,14 @@
 """
 Classes to build populations of stars (singles/bineries/triples)
 """
+import argparse as arg
 import numpy as np
 import pandas as pd
-import progressbar as pb
+try:
+    import progressbar as pb
+    pgbar=True
+except:
+    pgbar=False 
 # this package and necessary for Binaries
 from ic4popsyn import tools
 
@@ -44,7 +49,6 @@ class Binaries:
         else:
             print('No model selected (binaries is empty)! Build your own model.')
 
-
     @classmethod
     def setup_params(cls, self, kwards):
         params = {
@@ -59,15 +63,10 @@ class Binaries:
             'q_min': 0.1,
             'q_max': 1.0,
             'q_slope': -0.1,
-            'mass_min': 0.1,
-            "mass_min_policy":"qmin"
+            'mass_min': 0.1
         }
 
         for key in params.keys():
-            if key=="mass_min_policy":
-                allowed_options=("qmin","mmin")
-                if params[key] not in allowed_options: 
-                    raise InputError(f"mass_min_policy {params[key]} not implemented")
             if key in kwards:
                 setattr(self, key, kwards[key])
             else:
@@ -79,30 +78,31 @@ class Binaries:
         It draws a population of binaries based on Sana+12.
         """
         # The beginning of the main function
-        pbar = pb.ProgressBar().start()
+        if pgbar: pbar = pb.ProgressBar().start()
+        else: print("Start sampling.\n=> Sampling primary mass",flush=True)
         self.population['m1'] = tools.IMF(self.Nbin, self.mass_ranges, self.alphas)
         
         if self.single_pop: #if True returns only population['m1']
             pbar.finish()
             return
 
-        pbar.update((1/6)*100)
-        
-        if self.mass_min is not None and self.mass_min_policy=="qmin":
-            # Rescale q_min to draw a value so that mass2>m_min
+        if pgbar: pbar.update((1/6)*100)
+        else: print("=> Sampling secondary mass",flush=True)
+        if self.mass_min is not None:
             q_min = self.mass_min/self.population['m1']
             q_min = np.where(q_min>self.q_min,q_min,self.q_min)
         else:
             q_min = self.q_min
         q = tools.power_law(self.Nbin, q_min, self.q_max, self.q_slope)
-        pbar.update((2/6)*100)
+        if pgbar: pbar.update((2/6)*100)
         self.population['m2'] = self.population['m1'] * q
-        # If policy mmin and m2>mass_min force m2=mass_min
-        if self.mass_min_policy=="mmin":
-            self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
-        pbar.update((3/6)*100)
+        #The following has been replaced by the check on q_min, in this way we modify q_min but we don't create an accumulation of secondary stars with mass=min_mass        
+        #self.population['m2'] = np.where(secondary < self.mass_min, self.mass_min, secondary)
+        if pgbar: pbar.update((3/6)*100)
+        else: print("=> Sampling period",flush=True)
         self.population['p'] = pow(10.,tools.power_law(self.Nbin, self.logP_min, self.logP_max, self.logP_slope))
-        pbar.update((4/6)*100)
+        if pgbar: pbar.update((4/6)*100)
+        else: print("=> Sampling eccentricity",flush=True)
         if self.model == 'sana_eccm&ds':
             assert len(self.population[self.population['p'] > 2]) == self.Nbin
             Pecc = np.where(self.population['p'] < 2., 2.1, self.population['p'])
@@ -110,9 +110,11 @@ class Binaries:
             self.population['ecc'] = tools.vec_power_law(self.e_min, eccMax, self.e_slope)
         else:
             self.population['ecc'] = tools.power_law(self.Nbin, self.e_min, self.e_max, self.e_slope)
-        pbar.update((5/6)*100)
+        if pgbar: pbar.update((5/6)*100)
         self.population['a'] = tools.p2a(self.population['p'], self.population['m1'], self.population['m2'])        
-        pbar.finish()   
+        if pgbar: pbar.finish()   
+        else: print("=> Sampling finished",flush=True)
+
         # The end
     
     # To use pandas dataframe use to define the object
